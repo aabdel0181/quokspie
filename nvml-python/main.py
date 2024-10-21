@@ -19,17 +19,28 @@ for i in range(device_count):
 driver_version = pynvml.nvmlSystemGetDriverVersion()
 print(f"Driver version: {driver_version}")
 
+last_power_reading = None
 # Function to probe GPU metrics 8=D
 def gpu_prober():
     while True:
         temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
         clock_speed = pynvml.nvmlDeviceGetClockInfo(handle, pynvml.NVML_CLOCK_GRAPHICS)
         memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-        # TODO : Find power bc I only found the depreciated function 
+        # power_management_enabled = pynvml.nvmlDeviceGetPowerManagementMode(handle)
+        # print(f"Power management enabled: {power_management_enabled}")
+        # Cacheing last successful power value
+        try:
+            power = pynvml.nvmlDeviceGetPowerUsage(handle) / 1000.0 # mW to W
+            last_power_reading = power
+        except pynvml.NVMLError as err:
+            if isinstance(err, pynvml.NVMLError_NoData):
+                power = last_power_reading if last_power_reading is not None else "N/A"
+            else:
+                raise
 
-        print(f"Temp: {temperature} C, Clock: {clock_speed} MHz, Power: TODO, Memory Used: {memory_info.used / (1024 ** 2)} MB")
+        print(f"Temp: {temperature} C, Clock: {clock_speed} MHz, Power: {last_power_reading} W, Memory Used: {memory_info.used / (1024 ** 2)} MB")
         
-        # Poll every second
+        # Poll regularly
         time.sleep(1)
 
 # Run the GPU odometer in it's own separate thread

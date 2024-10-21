@@ -1,9 +1,12 @@
 # ReadMe For Python
 
-- First, create a new virtual environment 'python -m venv {name}' 
+- First, create a new virtual environment 'python -m venv venv' 
 - Then, source to activiate it (depends on which OS u have)
-- Then pip install requirments.txt once your venv is active 
-- Run main.py 
+    bash: 'source venv/Scripts/activate'
+    cmd prompt: '.\venv\Scripts\activate'
+- Then 'cd nvml-python'
+- Then 'pip install -r requirments.txt' once your venv is active 
+- Run main.py: 'python main.py'
 
 ## Note: there are little to no docs for the python wrapper for the c-based nvml library
 
