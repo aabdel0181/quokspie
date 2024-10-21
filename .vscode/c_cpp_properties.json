@@ -4,13 +4,15 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                 "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/include"
+                 "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/include",
+                 "C:/cygwin64/usr/include"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE"
-            ]
+            ],
+            "compilerPath": "C:/cygwin64/bin/g++.exe",
         }
     ],
     "version": 4
