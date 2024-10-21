@@ -26,7 +26,8 @@ Note how the output parameter becomes absorbed in our function call, and how the
 
 
 
-**node/npm versions**
+### node/npm versions
+```
   npm: '10.2.4',
   node: '20.11.1',
   acorn: '8.11.2',
@@ -52,3 +53,4 @@ Note how the output parameter becomes absorbed in our function call, and how the
   uvwasi: '0.0.19',
   v8: '11.3.244.8-node.17',
   zlib: '1.2.13.1-motley-5daffc7'
+```
