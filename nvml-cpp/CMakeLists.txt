@@ -22,7 +22,7 @@ if(NOT WIN32)
 endif()
 
 # Add the test executable
-add_executable(initial_tests ${CMAKE_SOURCE_DIR}/tests/basic_tests.cpp)
+add_executable(initial_tests ${CMAKE_SOURCE_DIR}/tests/temperature_test.cpp)
 target_link_libraries(initial_tests headers)
 
 # Set the working directory for the test executable
