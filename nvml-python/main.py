@@ -2,6 +2,7 @@ import threading
 import time
 # Note use nvidia official release nvidia-ml-py, not unofficial 
 import pynvml
+import postin_json_payload
 from pynvml import *
 
 def initialize():
@@ -42,7 +43,21 @@ def gpu_prober(handle):
                 raise
 
         print(f"Temp: {temperature} C, Clock: {clock_speed} MHz, Power: {last_power_reading} W, Memory Used: {memory_info.used / (1024 ** 2)} MB")
+
+        data = {
+            "Temp":
+                {"temperature_celsius": temperature},
+            "Clock": 
+                {"speed_mhz": clock_speed},
+            "Power": 
+                {"power_watts": last_power_reading},
+            "Memory Used": 
+                { "used_mb": memory_info.used / (1024 ** 2)}
+        }
         
+        # Send the data to the monitoring script to be posted to the server
+        postin_json_payload.receive_data_and_post(data)
+
         # Poll regularly
         time.sleep(1)
 
