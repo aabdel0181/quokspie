@@ -2,7 +2,7 @@
 #include <thread>
 #include <chrono>
 #include <nvml.h>
-
+#include "Stopwatch.h"
 nvmlDevice_t handle;
 nvmlReturn_t result;
 float last_power_reading = -1.0f;
@@ -60,7 +60,11 @@ void initialize()
 
 void gpu_prober()
 {
-    while (true)
+    // while (true)
+    // {
+    stopwatch overhead;
+    overhead.start();
+    for (int i = 0; i < 100000; i++)
     {
         unsigned int temperature;
         unsigned int clock_speed;
@@ -72,21 +76,25 @@ void gpu_prober()
         result = nvmlDeviceGetMemoryInfo(handle, &memory_info);
         result = nvmlDeviceGetPowerUsage(handle, &power);
 
-        if (result == NVML_SUCCESS)
-        {
-            last_power_reading = power / 1000.0f;
-            std::cout << "Temp: " << temperature << " C, Clock: " << clock_speed << " MHz, Power: "
-                      << last_power_reading << " W, Memory Used: "
-                      << memory_info.used / (1024 * 1024) << " MB" << std::endl;
-        }
-        else
-        {
-            std::cerr << "Error getting GPU metrics: " << nvmlErrorString(result) << std::endl;
-            break;
-        }
+        // if (result == NVML_SUCCESS)
+        // {
+        //     last_power_reading = power / 1000.0f;
+        //     std::cout << "Temp: " << temperature << " C, Clock: " << clock_speed << " MHz, Power: "
+        //               << last_power_reading << " W, Memory Used: "
+        //               << memory_info.used / (1024 * 1024) << " MB" << std::endl;
+        // }
+        // else
+        // {
+        //     std::cerr << "Error getting GPU metrics: " << nvmlErrorString(result) << std::endl;
+        //     break;
+        // }
 
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        // std::this_thread::sleep_for(std::chrono::seconds(1));
+        //}
     }
+    overhead.stop();
+    std::cout << "Average Latency of probing: " << overhead.latency() / 100000 << " ns." << std::endl;
+    std::cout << "Total Latency of probing 100000 times: " << overhead.avg_latency() << " ns." << std::endl;
 }
 
 void execute_workload()

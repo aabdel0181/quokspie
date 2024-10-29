@@ -3,6 +3,7 @@ import time
 # Note use nvidia official release nvidia-ml-py, not unofficial 
 import pynvml
 from pynvml import *
+import time
 
 def initialize():
     # Initialize NVML
@@ -24,27 +25,34 @@ def initialize():
     
 # Function to probe GPU metrics 8=D
 def gpu_prober(handle):
-    last_power_reading = None
-    while True:
+    start=time.perf_counter()
+    # last_power_reading = None
+    for i in range (100000):
+    # while True:
         temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
         clock_speed = pynvml.nvmlDeviceGetClockInfo(handle, pynvml.NVML_CLOCK_GRAPHICS)
         memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        power = pynvml.nvmlDeviceGetPowerUsage(handle) / 1000.0
         # power_management_enabled = pynvml.nvmlDeviceGetPowerManagementMode(handle)
         # print(f"Power management enabled: {power_management_enabled}")
         # Cacheing last successful power value
-        try:
-            power = pynvml.nvmlDeviceGetPowerUsage(handle) / 1000.0 # mW to W
-            last_power_reading = power
-        except pynvml.NVMLError as err:
-            if isinstance(err, pynvml.NVMLError_NoData):
-                power = last_power_reading if last_power_reading is not None else "N/A"
-            else:
-                raise
+        # try:
+        #     power = pynvml.nvmlDeviceGetPowerUsage(handle) / 1000.0 # mW to W
+        #     last_power_reading = power
+        # except pynvml.NVMLError as err:
+        #     if isinstance(err, pynvml.NVMLError_NoData):
+        #         power = last_power_reading if last_power_reading is not None else "N/A"
+        #     else:
+        #         raise
 
-        print(f"Temp: {temperature} C, Clock: {clock_speed} MHz, Power: {last_power_reading} W, Memory Used: {memory_info.used / (1024 ** 2)} MB")
+        # print(f"Temp: {temperature} C, Clock: {clock_speed} MHz, Power: {last_power_reading} W, Memory Used: {memory_info.used / (1024 ** 2)} MB")
         
         # Poll regularly
-        time.sleep(1)
+        # time.sleep(1)
+    stop =time.perf_counter()
+    print(f"Average latency of probing: \n", ((stop-start)/100000))
+    print(f"Total latency probing 100,000 times: \n", (stop-start))
+
 
 # Our main thread can handle our GPU workloads
 def execute_workload():
