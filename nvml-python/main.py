@@ -70,6 +70,11 @@ def gpu_prober(handle):
         # Send the data to the monitoring script to be posted to the servert
         response = requests.post(url, headers=headers, data=json.dumps(payload))
 
+        if response.status_code != 200:
+            print(f"Failed to post data: {response.status_code} - {response.text}")
+        else:
+            print("Data posted successfully")
+        
         # Poll regularly
         time.sleep(1)
 
