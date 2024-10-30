@@ -4,6 +4,8 @@ import time
 import pynvml
 import postin_json_payload
 from pynvml import *
+import requests
+import json
 
 def initialize():
     # Initialize NVML
@@ -43,8 +45,18 @@ def gpu_prober(handle):
                 raise
 
         print(f"Temp: {temperature} C, Clock: {clock_speed} MHz, Power: {last_power_reading} W, Memory Used: {memory_info.used / (1024 ** 2)} MB")
+        # MongoDB Data API configuration
+        url = "https://data.mongodb-api.com/app/671eca9104a9a5711bc23220/endpoint/data/v1/action/insertOne"
+        API_KEY = "cfb69235-e521-4c82-98f6-5f951f865cfa"  # private API key
 
-        data = {
+        # Headers for MongoDB Data API
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": API_KEY,
+            "Access-Control-Request-Headers": "*"
+        }
+
+        payload = {
             "Temp":
                 {"temperature_celsius": temperature},
             "Clock": 
@@ -55,8 +67,8 @@ def gpu_prober(handle):
                 { "used_mb": memory_info.used / (1024 ** 2)}
         }
         
-        # Send the data to the monitoring script to be posted to the server
-        postin_json_payload.receive_data_and_post(data)
+        # Send the data to the monitoring script to be posted to the servert
+        response = requests.post(url, headers=headers, data=json.dumps(payload))
 
         # Poll regularly
         time.sleep(1)
