@@ -35,13 +35,14 @@ def initialize():
     
 # Function to probe GPU metrics 8=D
 def gpu_prober(handle):
-    device_id = nvmlDeviceGetUUID(handle)
     last_power_reading = None
     
     while True:
         temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
         clock_speed = pynvml.nvmlDeviceGetClockInfo(handle, pynvml.NVML_CLOCK_GRAPHICS)
         memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        device_id = pynvml.nvmlDeviceGetUUID(handle)
+        
         # power_management_enabled = pynvml.nvmlDeviceGetPowerManagementMode(handle)
         # print(f"Power management enabled: {power_management_enabled}")
         # Cacheing last successful power value
@@ -54,7 +55,7 @@ def gpu_prober(handle):
             else:
                 raise
 
-        print(f"Temp: {temperature} C, Clock: {clock_speed} MHz, Power: {last_power_reading} W, Memory Used: {memory_info.used / (1024 ** 2)} MB")
+        print(f"ID: {device_id}, Temp: {temperature} C, Clock: {clock_speed} MHz, Power: {last_power_reading} W, Memory Used: {memory_info.used / (1024 ** 2)} MB")
         
         # store data in DynamoDB table
         store_metrics(
