@@ -5,7 +5,7 @@
     - bash: 'source venv/Scripts/activate'
     - cmd prompt: '.\venv\Scripts\activate'
 - Then 'cd nvml-python'
-- Then 'pip install -r requirments.txt' once your venv is active 
+- Then 'pip install -r requirements.txt' once your venv is active 
 - Run main.py: 'python main.py'
 
 ## Note: there are little to no docs for the python wrapper for the c-based nvml library
