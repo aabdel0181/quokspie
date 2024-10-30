@@ -46,7 +46,7 @@ def gpu_prober(handle):
 
         print(f"Temp: {temperature} C, Clock: {clock_speed} MHz, Power: {last_power_reading} W, Memory Used: {memory_info.used / (1024 ** 2)} MB")
         # MongoDB Data API configuration
-        url = "https://data.mongodb-api.com/app/671eca9104a9a5711bc23220/endpoint/data/v1/action/insertOne"
+        url = "http://127.0.0.1:5000/post-json-payload"
         API_KEY = "cfb69235-e521-4c82-98f6-5f951f865cfa"  # private API key
 
         # Headers for MongoDB Data API
