@@ -6,12 +6,16 @@ from datetime import datetime, timezone
 import pynvml
 from pynvml import *
 from decimal import Decimal
+# Use to load aws keys
+from dotenv import load_dotenv
+import os
 
 # init DynamoDB 
 dynamodb = boto3.resource(
     "dynamodb",
     region_name="us-east-1",
-    # key id and secret key
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
 )
 table = dynamodb.Table('senior_design_dummy')
 
