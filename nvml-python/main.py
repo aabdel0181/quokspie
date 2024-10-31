@@ -6,9 +6,10 @@ from datetime import datetime, timezone
 import pynvml
 from pynvml import *
 from decimal import Decimal
-# Use to load aws keys
 from dotenv import load_dotenv
 import os
+
+load_dotenv()
 
 # init DynamoDB 
 dynamodb = boto3.resource(
