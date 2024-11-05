@@ -19,9 +19,9 @@ asylo::Status GpuOdometerEnclave::Run(const asylo::EnclaveInput &input, asylo::E
   if (!initialized_) {
     return asylo::Status(error::GoogleError::FAILED_PRECONDITION, "Enclave not initialized");
   }
-  const std::string &command = input.GetExtension(asylo::my_proto::command);
+  const std::string command = input.GetExtension(asylo::my_proto::command);
   if (command ==  "GenerateKey") {
-    return GenerateKey(nonce);
+    return GenerateKey(nonce, output);
   } else if (command == "ValidateHmac") {
     pollPack pack = input.GetExtension(asylo::my_proto::pack);
     std::string_view received_hmac = input.GetExtension(asylo::my_proto::hmac);
@@ -41,13 +41,13 @@ std::string DerivePollKey(std::string &seed, uint64_t nonce) {
     return asylo::util::HkdfSha256::ExtractAndExpand(seed, nonceStr);
 }
 
-Status GenerateKey(uint64_t &nonce) {
+Status GenerateKey(uint64_t &nonce, asylo::EnclaveOutput *output) {
     //maybe we make nonce random or something
     nonce ++;
     std::string pollKey = DerivePollKey(GenerateSeed(), nonce);
-    asylo::EnclaveOutput output;
     output.Set("pollkey", pollKey);
     return output;
+
 }
 Status ValidateHmac(pollPack pack const std::string_view received_hmac) {
   unsigned char comparison[EVP_MAX_MD_SIZE];
