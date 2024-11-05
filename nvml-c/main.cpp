@@ -2,6 +2,7 @@
 #include <thread>
 #include <chrono>
 #include <nvml.h>
+#include <vector>
 
 nvmlDevice_t handle;
 nvmlReturn_t result;
@@ -66,7 +67,9 @@ void gpu_prober()
         unsigned int clock_speed;
         nvmlMemory_t memory_info;
         unsigned int power;
+        unsigned int infoCount = 0;
 
+        // Poll for temperature, clock speed, memory, power
         result = nvmlDeviceGetTemperature(handle, NVML_TEMPERATURE_GPU, &temperature);
         result = nvmlDeviceGetClockInfo(handle, NVML_CLOCK_GRAPHICS, &clock_speed);
         result = nvmlDeviceGetMemoryInfo(handle, &memory_info);
@@ -85,6 +88,41 @@ void gpu_prober()
             break;
         }
 
+        // Check for running compute processes
+        result = nvmlDeviceGetComputeRunningProcesses_v3(handle, &infoCount, nullptr);
+        if (result == NVML_SUCCESS) {
+            std::vector<nvmlProcessInfo_t> infos(infoCount);
+            result = nvmlDeviceGetComputeRunningProcesses_v3(handle, &infoCount, infos.data());
+            // .data() is pointer to the first element of the infos array
+            if (result == NVML_SUCCESS) {
+                std::cout << "Compute Processes Running:" << std::endl;
+                // Iterating over each element in the infos container
+                // Auto automatically detects type
+                for (const auto &info: infos) {
+                    std::cout << "  PID: " << info.pid << ", Memory Used: "
+                              << info.usedGpuMemory / (1024 * 1024) << " MB" << std::endl;
+                }
+            }
+        }
+
+        // Check for running graphics processes
+        result = nvmlDeviceGetGraphicsRunningProcesses_v3(handle, &infoCount, nullptr);
+        if (result == NVML_SUCCESS) {
+            std::vector<nvmlProcessInfo_t> infos(infoCount);
+            result = nvmlDeviceGetGraphicsRunningProcesses_v3(handle, &infoCount, infos.data());
+            // .data() is pointer to the first element of the infos array
+            if (result == NVML_SUCCESS) {
+                std::cout << "Graphics Processes Running:" << std::endl;
+                // Iterating over each element in the infos container
+                // Auto automatically detects type
+                for (const auto &info: infos) {
+                    std::cout << "  PID: " << info.pid << ", Memory Used: "
+                              << info.usedGpuMemory / (1024 * 1024) << " MB" << std::endl;
+                }
+            }
+        }
+
+        // Sleep
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
