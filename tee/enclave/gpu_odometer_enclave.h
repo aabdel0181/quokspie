@@ -5,6 +5,15 @@
 #include "asylo/enclave.pb.h"
 #include "asylo/trusted_application.h"
 #include "asylo/util/status.h"
+#include <string>
+#include "asylo/util/hkdf_sha256.h"
+#include "asylo/util/secure_random.h"
+#include "asylo/util/status.h"
+#include <openssl/sha.h>
+#include <openssl/hmac.h>
+#include <openssl/crypto.h>
+#include <openssl/evp.h>
+#include gpu_odometer.h
 
 class GpuOdometerEnclave : public asylo::TrustedApplication {
  public:

@@ -3,6 +3,11 @@
 #include "asylo/util/status_macros.h"
 
 asylo::Status GpuOdometerEnclave::Initialize(const asylo::EnclaveConfig &config) {
+  //init nonce
+  uint64_t nonce = 0;
+  //pass nonce into pkey
+  std::string seed = GenerateSeed(); 
+  
   // Initialize NVML
   nvmlReturn_t result = nvmlInit();
   if (result != NVML_SUCCESS) {
@@ -46,42 +51,27 @@ asylo::Status GpuOdometerEnclave::Finalize(const asylo::EnclaveFinal &enclave_fi
 }
 
 
-#ifndef GPU_ODOMETER_ENCLAVE_H_
-#define GPU_ODOMETER_ENCLAVE_H_
-
-#include "asylo/enclave.pb.h"
-#include "asylo/trusted_application.h"
-#include <nvml.h>
-#include <string>
-#include "asylo/util/hkdf_sha256.h"
-#include "asylo/util/secure_random.h"
-#include "asylo/util/status.h"
-#include gpu_odometer.h
-
-class GpuOdometerEnclave : public asylo::TrustedApplication {
-    //init nonce
-    uint64_t nonce = 0;
-    //pass nonce into pkey
-    std::string seed = GenerateSeed(); 
 
 
-    std::string DerivePollKey(std::string &seed, uint64_t nonce) {
-        std::string pollKey = seed + std::to_string(nonce);
-        return asylo::util::HkdfSha256::ExtractAndExpand(seed, pollKey);
-    }
+std::string DerivePollKey(std::string &seed, uint64_t nonce) {
+    std::string pollKey = seed + std::to_string(nonce);
+    return asylo::util::HkdfSha256::ExtractAndExpand(seed, pollKey);
+}
 
-    Status GenerateKey() {
-        //maybe we make nonce random or something
-        nonce ++;
-        std::string pollKey = DerivePollKey(GenerateSeed(), nonce);
-        asylo::EnclaveOutput output;
-        output.Set("pollkey", pollKey);
-        return output;
-    }
-    Status VerifyData(const std::string &data, const std::string &received_hmac) {
-        
-    }
-};
+Status GenerateKey(uint64_t &nonce) {
+    //maybe we make nonce random or something
+    nonce ++;
+    std::string pollKey = DerivePollKey(GenerateSeed(), nonce);
+    asylo::EnclaveOutput output;
+    output.Set("pollkey", pollKey);
+    return output;
+}
+Status ValidateHmac(const std::string_view pollKey, pollPack pack const std::string_view received_hmac) {
+  unsigned char comparison[EVP_MAX_MD_SIZE];
+  HMAC(EVP_sha256(), key, sizeof(key), (const unsigned char*)&pack, sizeof(pack), comparison, NULL);
+  //true if validated, same hmac as we created, false if not
+  return CRYPTO_memcmp(comparison, received_hmac, EVP_MAX_MD_SIZE);
+}
 
 
 
