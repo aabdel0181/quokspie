@@ -22,20 +22,20 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cors())
 
-console.log("hello")
 /* ROUTES */
 app.use("/kpi", kpiRoutes)
+
+console.log("Server is starting...");
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 9000;
 mongoose
-    .connect(process.env.MONGO_URL, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    })
+    .connect(process.env.MONGO_URL)
     .then(async () => {
         app.listen(PORT, () => console.log(`Server Port: ${PORT}`))
-        await mongoose.connection.db.dropDatabase()
-        KPI.insertMany(kpis)    
+        
+        //* ADD DATA ONE TIME ONLY OR AS NEEDED
+        //await mongoose.connection.db.dropDatabase()
+        //KPI.insertMany(kpis)    
     })
     .catch((error) => console.log(`${error} did not connect`)) 
