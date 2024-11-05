@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "helmet": "^8.0.0",
+    "mongoose": "^8.8.0",
+    "mongoose-currency": "^0.3.0",
+    "morg": "^0.1.0"
+  }
+}

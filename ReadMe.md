@@ -2,10 +2,10 @@
 
 - First, create a new virtual environment 'python -m venv venv' 
 - Then, source to activiate it (depends on which OS u have)
-    - bash: 'source venv/Scripts/activate'
+    - bash: 'source venv/Scripts/activate' [note, Scripts may be "bin"]
     - cmd prompt: '.\venv\Scripts\activate'
 - Then 'cd nvml-python'
-- Then 'pip install -r requirments.txt' once your venv is active 
+- Then 'pip install -r requirements.txt' once your venv is active 
 - Run main.py: 'python main.py'
 
 # ReadMe For Python
