@@ -16,7 +16,7 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            },
+            }cmal,
             "problemMatcher": ["$gcc"],
             "detail": "C++ build using Cygwin's g++"
         }

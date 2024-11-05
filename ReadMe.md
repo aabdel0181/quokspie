@@ -8,6 +8,21 @@
 - Then 'pip install -r requirments.txt' once your venv is active 
 - Run main.py: 'python main.py'
 
+# ReadMe For Python
+- First, download cmake and ninja and verify installations by running
+'cmake --version'
+'ninja --version'
+- Create a build directory 
+'mkdir build'
+'cd build'
+- Project is already defined in CMakeLists.txt
+- In the build directory,
+'cmake -G Ninja ..'
+- Build the project
+'ninja'
+- Run the executable
+'./gpu_odometer.exe'
+
 ## Note: there are little to no docs for the python wrapper for the c-based nvml library
 
 Basically, from reading the docs I can give a little explanation about the important things to note.
