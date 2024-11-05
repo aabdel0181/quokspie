@@ -29,19 +29,27 @@ void keygen(asylo::EnclaveClient *client) {
 void sendHMAC(asylo::EnclaveCleint *client, pollPack pack) {
     asylo::EnclaveInput input;
     asylo::EnclaveOutput output;
-    input.SetExtension(my_proto::command, "ValidateHmac");
-    input.SetExtension(my_proto::command, "ValidateHmac");
-    input.SetExtension(my_proto::command, "ValidateHmac");
-    client->EnterAndRun(input, &output);
-    if (!status.ok()) {
-        std::cerr << "Failed to generate key" << std::endl;
-        return 0;
-    }
     key = output.GetExtension(my_proto::pollkey);
     std::cout << "Key: " << key << std::endl;
     unsigned char hmac[EVP_MAX_MD_SIZE];
     HMAC(EVP_sha256(), key, sizeof(key), (const unsigned char*)&pack, sizeof(pack), hmac, NULL);
     //SEND PACK + HMAC TO ENCLAVE
+    input.SetExtension(my_proto::command, "ValidateHmac");
+    input.SetExtension(my_proto::pack, pack);
+    input.SetExtension(my_proto::hmac, hmac);
+    client->EnterAndRun(input, &output);
+    if (!status.ok()) {
+        std::cerr << "Failed to call validate hmac" << std::endl;
+        return 0;
+    }
+    bool validated = output.GetExtension(my_proto::valid);
+    if (valid) {
+        std::cout << "HMAC Valid" << std::endl;
+    } else {
+        std::cout << "HMAC Invalid" << std::endl;
+        std::cerr << "HMAC Validation failed. Exiting..." << std::endl;
+        return 0;
+    }
 }
 
 

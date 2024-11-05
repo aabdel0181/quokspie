@@ -66,11 +66,13 @@ Status GenerateKey(uint64_t &nonce) {
     output.Set("pollkey", pollKey);
     return output;
 }
-Status ValidateHmac(const std::string_view pollKey, pollPack pack const std::string_view received_hmac) {
+Status ValidateHmac(pollPack pack const std::string_view received_hmac) {
   unsigned char comparison[EVP_MAX_MD_SIZE];
   HMAC(EVP_sha256(), key, sizeof(key), (const unsigned char*)&pack, sizeof(pack), comparison, NULL);
   //true if validated, same hmac as we created, false if not
-  return CRYPTO_memcmp(comparison, received_hmac, EVP_MAX_MD_SIZE);
+  asylo::EnclaveOutput output;
+  output.Set("valid", CRYPTO_memcmp(comparison, received_hmac, EVP_MAX_MD_SIZE));
+  return output;
 }
 
 
