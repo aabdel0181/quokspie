@@ -7,6 +7,7 @@
 nvmlDevice_t handle;
 nvmlReturn_t result;
 float last_power_reading = -1.0f;
+char uuid[96]; // Buffer to store the UUID
 
 void initialize()
 {
@@ -45,6 +46,17 @@ void initialize()
             return;
         }
         std::cout << "Device " << i << ": " << name << std::endl;
+
+        // Get the UUID once and store it for printing in each loop iteration
+        result = nvmlDeviceGetUUID(handle, uuid, sizeof(uuid));
+        if (result == NVML_SUCCESS)
+        {
+            std::cout << "Device UUID: " << uuid << std::endl;
+        }
+        else
+        {
+            std::cerr << "Failed to get device UUID for device " << i << ": " << nvmlErrorString(result) << std::endl;
+        }
     }
 
     char driver_version[80];
@@ -74,12 +86,12 @@ void gpu_prober()
         result = nvmlDeviceGetClockInfo(handle, NVML_CLOCK_GRAPHICS, &clock_speed);
         result = nvmlDeviceGetMemoryInfo(handle, &memory_info);
         result = nvmlDeviceGetPowerUsage(handle, &power);
-
+        result = nvmlDeviceGetUUID(handle, uuid, sizeof(uuid));
         if (result == NVML_SUCCESS)
         {
             last_power_reading = power / 1000.0f;
-            std::cout << "Temp: " << temperature << " C, Clock: " << clock_speed << " MHz, Power: "
-                      << last_power_reading << " W, Memory Used: "
+            std::cout << "UUID: " << uuid << ", Temp: " << temperature << " C, Clock: " << clock_speed
+                      << " MHz, Power: " << last_power_reading << " W, Memory Used: "
                       << memory_info.used / (1024 * 1024) << " MB" << std::endl;
         }
         else
@@ -90,15 +102,15 @@ void gpu_prober()
 
         // Check for running compute processes
         result = nvmlDeviceGetComputeRunningProcesses_v3(handle, &infoCount, nullptr);
-        if (result == NVML_SUCCESS) {
+        if (result == NVML_SUCCESS && infoCount > 0)
+        {
             std::vector<nvmlProcessInfo_t> infos(infoCount);
             result = nvmlDeviceGetComputeRunningProcesses_v3(handle, &infoCount, infos.data());
-            // .data() is pointer to the first element of the infos array
-            if (result == NVML_SUCCESS) {
+            if (result == NVML_SUCCESS)
+            {
                 std::cout << "Compute Processes Running:" << std::endl;
-                // Iterating over each element in the infos container
-                // Auto automatically detects type
-                for (const auto &info: infos) {
+                for (const auto &info : infos)
+                {
                     std::cout << "  PID: " << info.pid << ", Memory Used: "
                               << info.usedGpuMemory / (1024 * 1024) << " MB" << std::endl;
                 }
@@ -107,15 +119,15 @@ void gpu_prober()
 
         // Check for running graphics processes
         result = nvmlDeviceGetGraphicsRunningProcesses_v3(handle, &infoCount, nullptr);
-        if (result == NVML_SUCCESS) {
+        if (result == NVML_SUCCESS && infoCount > 0)
+        {
             std::vector<nvmlProcessInfo_t> infos(infoCount);
             result = nvmlDeviceGetGraphicsRunningProcesses_v3(handle, &infoCount, infos.data());
-            // .data() is pointer to the first element of the infos array
-            if (result == NVML_SUCCESS) {
+            if (result == NVML_SUCCESS)
+            {
                 std::cout << "Graphics Processes Running:" << std::endl;
-                // Iterating over each element in the infos container
-                // Auto automatically detects type
-                for (const auto &info: infos) {
+                for (const auto &info : infos)
+                {
                     std::cout << "  PID: " << info.pid << ", Memory Used: "
                               << info.usedGpuMemory / (1024 * 1024) << " MB" << std::endl;
                 }
