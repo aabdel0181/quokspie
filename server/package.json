@@ -23,6 +23,7 @@
     "helmet": "^8.0.0",
     "mongoose": "^8.7.3",
     "mongoose-currency": "^0.3.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "recharts": "^2.13.3"
   }
 }
