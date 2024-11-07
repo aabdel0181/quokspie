@@ -14,8 +14,8 @@ const Navbar = (props: Props) => {
         {/* LEFT SIDE */}
         <FlexBetween gap="0.75rem">
             <PixIcon sx = {{ fontSize: "28px"}} />
-            <Typography variant="h4" fontSize="16px">
-                Quokkspiee
+            <Typography variant="h4" fontSize="20px">
+                Quokspy
             </Typography>
         </FlexBetween>
 
@@ -24,9 +24,9 @@ const Navbar = (props: Props) => {
             <Box sx={{ "&:hover": { color: palette.primary[100] } }}>
                 <Link
                     to="/"
-                    onClick={() => setSelected("Ahmed's GPU")}
+                    onClick={() => setSelected("dashboard")}
                     style={{
-                        color: selected === "Ahmed's GPU" ? "inherit" : palette.grey[700],
+                        color: selected === "dashboard" ? "inherit" : palette.grey[700],
                         textDecoration: "inherit"
                     }}
                 >

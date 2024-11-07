@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import DashboardBox from '../../components/DashboardBox';
 import { useGetDeviceDataQuery } from '../../state/api';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 import { useTheme } from '@mui/material/styles';
 import BoxHeader from '../../components/BoxHeader';
 
@@ -35,22 +35,26 @@ const Row1 = () => {
                 <BoxHeader
                     title="Clock Speed Over Time"
                     subtitle="Visualizing clock speed of devices over time"
-                    sideText="Last updated"
+                    sideText=""
                 />
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                         data={clockSpeedData}
                         margin={{
                             top: 20,
-                            right: 20,
-                            left: 0,
-                            bottom: 20,
+                            right: 30,
+                            left: -15,
+                            bottom: 60,
                         }}
                     >
-                        <XAxis dataKey="name" tickLine={false} style={{ fontSize: "10px" }} />
-                        <YAxis tickLine={false} style={{ fontSize: "10px" }} />
+                        <XAxis 
+                          dataKey="name" 
+                          tickLine={false} 
+                          style={{ fontSize: "10px" }} />
+                        <YAxis 
+                          tickLine={false} 
+                          style={{ fontSize: "10px" }} />
                         <Tooltip />
-                        <Legend />
                         <Line type="monotone" dataKey="value" stroke={palette.primary.main} dot={false} />
                     </LineChart>
                 </ResponsiveContainer>
@@ -61,22 +65,26 @@ const Row1 = () => {
                 <BoxHeader
                     title="Memory Usage Over Time"
                     subtitle="Visualizing memory usage of devices over time"
-                    sideText="Last updated"
+                    sideText=""
                 />
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                         data={memoryUsageData}
                         margin={{
-                            top: 20,
-                            right: 20,
-                            left: 0,
-                            bottom: 20,
+                          top: 20,
+                          right: 30,
+                          left: -15,
+                          bottom: 60,
                         }}
                     >
-                        <XAxis dataKey="name" tickLine={false} style={{ fontSize: "10px" }} />
-                        <YAxis tickLine={false} style={{ fontSize: "10px" }} />
+                        <XAxis 
+                          dataKey="name" 
+                          tickLine={false} 
+                          style={{ fontSize: "10px" }} />
+                        <YAxis 
+                        tickLine={false} 
+                        style={{ fontSize: "10px" }} />
                         <Tooltip />
-                        <Legend />
                         <Line type="monotone" dataKey="value" stroke={palette.secondary.main} dot={false} />
                     </LineChart>
                 </ResponsiveContainer>
