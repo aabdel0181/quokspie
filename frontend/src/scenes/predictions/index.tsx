@@ -40,7 +40,7 @@ const Dashboard = () => {
             display="grid" 
             gap="1.5rem"
             sx={{
-                marginTop: '2rem',
+                marginTop: '1rem',
                 ...(isAboveMediumScreens ? {
                     gridTemplateColumns: "repeat(2, minmax(370px, 1fr))",
                     gridTemplateRows: "repeat(10, minmax(80px, 1fr))",

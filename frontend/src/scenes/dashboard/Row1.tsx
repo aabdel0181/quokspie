@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import DashboardBox from '../../components/DashboardBox';
 import { useGetDeviceDataQuery } from '../../state/api';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, defs, linearGradient, stop } from 'recharts';
 import { useTheme } from '@mui/material/styles';
 import BoxHeader from '../../components/BoxHeader';
 
@@ -27,7 +27,7 @@ const Row1 = () => {
           ?.filter(({ DeviceId }) => DeviceId === deviceIdToFilter) // Filter by DeviceId
           .map(({ Timestamp, MemoryUsed }) => ({
               name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
-              value: MemoryUsed,
+              value: parseFloat(MemoryUsed.toFixed(3)), // Limit to 3 decimal places
           }));
   }, [data]);
 
@@ -44,7 +44,7 @@ const Row1 = () => {
                     sideText=""
                 />
                 <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
+                    <AreaChart
                         data={clockSpeedData}
                         margin={{
                             top: 20,
@@ -53,6 +53,12 @@ const Row1 = () => {
                             bottom: 60,
                         }}
                     >
+                        <defs>
+                            <linearGradient id="colorClockSpeed" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor={palette.primary.main} stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor={palette.primary.main} stopOpacity={0}/>
+                            </linearGradient>
+                        </defs>
                         <XAxis 
                           dataKey="name" 
                           tickLine={false} 
@@ -61,8 +67,8 @@ const Row1 = () => {
                           tickLine={false} 
                           style={{ fontSize: "10px" }} />
                         <Tooltip />
-                        <Line type="monotone" dataKey="value" stroke={palette.primary.main} dot={false} />
-                    </LineChart>
+                        <Area type="monotone" dataKey="value" stroke={palette.primary.main} fill="url(#colorClockSpeed)" />
+                    </AreaChart>
                 </ResponsiveContainer>
             </DashboardBox>
 
@@ -74,7 +80,7 @@ const Row1 = () => {
                     sideText=""
                 />
                 <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
+                    <AreaChart
                         data={memoryUsageData}
                         margin={{
                           top: 20,
@@ -83,6 +89,12 @@ const Row1 = () => {
                           bottom: 60,
                         }}
                     >
+                        <defs>
+                            <linearGradient id="colorMemoryUsage" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor={palette.secondary.main} stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor={palette.secondary.main} stopOpacity={0}/>
+                            </linearGradient>
+                        </defs>
                         <XAxis 
                           dataKey="name" 
                           tickLine={false} 
@@ -91,12 +103,10 @@ const Row1 = () => {
                         tickLine={false} 
                         style={{ fontSize: "10px" }} />
                         <Tooltip />
-                        <Line type="monotone" dataKey="value" stroke={palette.secondary.main} dot={false} />
-                    </LineChart>
+                        <Area type="monotone" dataKey="value" stroke={palette.secondary.main} fill="url(#colorMemoryUsage)" />
+                    </AreaChart>
                 </ResponsiveContainer>
             </DashboardBox>
-
-            
         </>
     );
 };
