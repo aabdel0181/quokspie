@@ -102,34 +102,35 @@ void gpu_prober()
 
         // Check for running compute processes
         result = nvmlDeviceGetComputeRunningProcesses_v3(handle, &infoCount, nullptr);
-        if (result == NVML_SUCCESS && infoCount > 0)
-        {
+        if (result == NVML_ERROR_INSUFFICIENT_SIZE && infoCount > 0) {
+            // Allocate the required buffer
             std::vector<nvmlProcessInfo_t> infos(infoCount);
+
+            // Call again with the allocated array to retrieve the actual process info
             result = nvmlDeviceGetComputeRunningProcesses_v3(handle, &infoCount, infos.data());
-            if (result == NVML_SUCCESS)
-            {
-                std::cout << "Compute Processes Running:" << std::endl;
-                for (const auto &info : infos)
-                {
-                    std::cout << "  PID: " << info.pid << ", Memory Used: "
-                              << info.usedGpuMemory / (1024 * 1024) << " MB" << std::endl;
+
+            if (result == NVML_SUCCESS) {
+                for (const auto &info : infos) {
+                    std::cout << " Compute Processes Running: PID: " << info.pid
+                            << ", Memory Used: " << info.usedGpuMemory / (1024 * 1024) << " MB" << std::endl;
                 }
             }
         }
 
+
         // Check for running graphics processes
         result = nvmlDeviceGetGraphicsRunningProcesses_v3(handle, &infoCount, nullptr);
-        if (result == NVML_SUCCESS && infoCount > 0)
-        {
+        if (result == NVML_ERROR_INSUFFICIENT_SIZE && infoCount > 0) {
+            // Allocate the required buffer
             std::vector<nvmlProcessInfo_t> infos(infoCount);
+
+            // Call again with the allocated array to retrieve the actual process info
             result = nvmlDeviceGetGraphicsRunningProcesses_v3(handle, &infoCount, infos.data());
-            if (result == NVML_SUCCESS)
-            {
-                std::cout << "Graphics Processes Running:" << std::endl;
-                for (const auto &info : infos)
-                {
-                    std::cout << "  PID: " << info.pid << ", Memory Used: "
-                              << info.usedGpuMemory / (1024 * 1024) << " MB" << std::endl;
+
+            if (result == NVML_SUCCESS) {
+                for (const auto &info : infos) {
+                    std::cout << "  Graphics Processes Running: PID: " << info.pid
+                            << ", Memory Used: " << info.usedGpuMemory / (1024 * 1024) << " MB" << std::endl;
                 }
             }
         }
