@@ -1,15 +1,26 @@
-import express from "express"
-import Product from "../models/Product.js"
+import express from "express";
 
-const router = express.Router()
+const productRoutes = (dynamoDB) => {
+    const router = express.Router();
+    const TABLE_NAME = "Products";
 
-router.get("/products", async (req, res) => {
-    try {
-        const products = await Product.find()
-        res.status(200).json(products)
-    }   catch (errror) {
-            res.status(484).json({ message: error.message })
-    }
-})
+    // GET endpoint to fetch all products
+    router.get("/products", async (req, res) => {
+        const params = {
+            TableName: TABLE_NAME,
+        };
 
-export default router
+        try {
+            // scan op to get all items in table
+            const data = await dynamoDB.scan(params).promise();
+            res.status(200).json(data.Items);
+        } catch (error) {
+            console.error("Error fetching products:", error);
+            res.status(500).json({ message: error.message });
+        }
+    });
+
+    return router;
+};
+
+export default productRoutes;

@@ -1,33 +1,37 @@
+import AWS from "aws-sdk";
+import deviceRoutes from "./routes/deviceRoutes.js"; // Updated route import
 import express from "express";
-import bodyParser from "body-parser"
-import mongoose, { mongo } from "mongoose"
-import cors from "cors"
-import dotenv from "dotenv"
-import helmet from "helmet"
-import morgan from "morgan"
-import { error } from "console";
-import kpiRoutes from "./routes/kpi.js"
+import bodyParser from "body-parser";
+import mongoose from "mongoose";
+import cors from "cors";
+import dotenv from "dotenv";
+import helmet from "helmet";
+import morgan from "morgan";
+import kpiRoutes from "./routes/kpi.js";
+import productRoutes from "./routes/product.js";
 import KPI from "./models/KPI.js";
-import Product from "./models/Product.js"
-import productRoutes from "./routes/product.js"
-import { kpis, products } from "./data/data.js"
+import Product from "./models/Product.js";
+import { kpis, products } from "./data/data.js";
 
+// Load environment variables
+dotenv.config();
 
 /* CONFIGURATIONS */
-dotenv.config()
-const app = express()
-app.use(express.json())
-app.use(helmet())
-app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin"}))
-app.use(morgan("common"))
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(cors())
+const app = express();
+app.use(express.json());
+app.use(helmet());
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
+app.use(morgan("common"));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cors());
 
-console.log("hello")
+console.log("hello");
+
 /* ROUTES */
-app.use("/kpi", kpiRoutes)
-app.use("/product", productRoutes)
+app.use("/kpi", kpiRoutes);
+app.use("/product", productRoutes);
+
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 9000;
 mongoose
@@ -36,11 +40,23 @@ mongoose
         useUnifiedTopology: true,
     })
     .then(async () => {
-        app.listen(PORT, () => console.log(`Server Port: ${PORT}`))
+        app.listen(PORT, () => console.log(`Server Port: ${PORT}`));
         
         //* ADD DATA ONE TIME ONLY OR AS NEEDED
-        //await mongoose.connection.db.dropDatabase() */
-        //KPI.insertMany(kpis)    
-        //Product.insertMany(products)    
+        //await mongoose.connection.db.dropDatabase();
+        //KPI.insertMany(kpis);
+        //Product.insertMany(products);
     })
-    .catch((error) => console.log(`${error} did not connect`)) 
+    .catch((error) => console.log(`${error} did not connect`));
+
+// AWS SDK Configuration for DynamoDB
+AWS.config.update({
+    region: process.env.AWS_REGION,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
+
+const dynamoDB = new AWS.DynamoDB.DocumentClient();
+
+// Route setup (pass DynamoDB client to deviceRoutes)
+app.use("/api", deviceRoutes(dynamoDB));

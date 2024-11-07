@@ -1,15 +1,26 @@
-import express from "express"
-import KPI from "../models/KPI.js"
+import express from "express";
 
-const router = express.Router()
+const kpiRoutes = (dynamoDB) => {
+    const router = express.Router();
+    const TABLE_NAME = "Kpis";
 
-router.get("/kpis", async (req, res) => {
-    try {
-        const kpis = await KPI.find()
-        res.status(200).json(kpis)
-    }   catch (errror) {
-            res.status(484).json({ message: error.message })
-    }
-})
+    // GET endpoint to fetch all KPIs
+    router.get("/kpis", async (req, res) => {
+        const params = {
+            TableName: TABLE_NAME,
+        };
 
-export default router
+        try {
+            // scan operation to get all items in table
+            const data = await dynamoDB.scan(params).promise();
+            res.status(200).json(data.Items);
+        } catch (error) {
+            console.error("Error fetching KPIs:", error);
+            res.status(500).json({ message: error.message });
+        }
+    });
+
+    return router;
+};
+
+export default kpiRoutes;
