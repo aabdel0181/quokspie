@@ -11,20 +11,26 @@ const Row2 = (props: Props) => {
   const { palette } = useTheme();
   const { data, isLoading, error } = useGetDeviceDataQuery();
  
-  // Process data for Temperature chart
+  const deviceIdToFilter = "GPU-bbc80d76-6599-a3e1-0cb6-db0b4fb59df6";
+ 
+  // Filter and process data for Temperature chart
   const temperatureData = useMemo(() => {
-    return data?.map(({ Timestamp, Temperature }) => ({
-        name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
-        value: Temperature,
-    }));
+    return data
+        ?.filter(({ DeviceId }) => DeviceId === deviceIdToFilter) // Filter by DeviceId
+        .map(({ Timestamp, Temperature }) => ({
+            name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
+            value: Temperature,
+        }));
 }, [data]);
 
-// Process data for PowerUsage chart
+// Filter and process data for PowerUsage chart
 const powerUsageData = useMemo(() => {
-    return data?.map(({ Timestamp, PowerUsage }) => ({
-        name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
-        value: PowerUsage,
-    }));
+  return data
+      ?.filter(({ DeviceId }) => DeviceId === deviceIdToFilter) // Filter by DeviceId
+      .map(({ Timestamp, PowerUsage }) => ({
+          name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
+          value: PowerUsage,
+      }));
 }, [data]);
 
   return (
