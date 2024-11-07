@@ -15,25 +15,25 @@ const Navbar = (props: Props) => {
         <FlexBetween gap="0.75rem">
             <PixIcon sx = {{ fontSize: "28px"}} />
             <Typography variant="h4" fontSize="16px">
-                Finanseer
+                Quokkspiee
             </Typography>
         </FlexBetween>
 
         {/* RIGHT SIDE */}
         <FlexBetween gap="2rem">
-            <Box sx={{ "&:hover": { color: palette.primary[100]}}}>
+            <Box sx={{ "&:hover": { color: palette.primary[100] } }}>
                 <Link
                     to="/"
-                    onClick={() => setSelected("dashboard")}
+                    onClick={() => setSelected("Ahmed's GPU")}
                     style={{
-                        color: selected === "dashboard" ? "inherit" : palette.grey[700],
+                        color: selected === "Ahmed's GPU" ? "inherit" : palette.grey[700],
                         textDecoration: "inherit"
                     }}
                 >
-                    dashboard
+                    Ahmed's GPU
                 </Link>
             </Box>
-            <Box sx={{ "&:hover": { color: palette.primary[100]}}}>
+            <Box sx={{ "&:hover": { color: palette.primary[100] } }}>
                 <Link
                     to="/predictions"
                     onClick={() => setSelected("predictions")}
@@ -42,7 +42,7 @@ const Navbar = (props: Props) => {
                         textDecoration: "inherit"
                     }}
                 >
-                    predictions
+                    Taru's GPU
                 </Link>
             </Box>
         </FlexBetween>
