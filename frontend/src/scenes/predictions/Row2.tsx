@@ -1,15 +1,14 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import DashboardBox from '../../components/DashboardBox'
 import { useGetDeviceDataQuery } from '../../state/api'
 import BoxHeader from '../../components/BoxHeader'
-import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis, defs, linearGradient, stop } from 'recharts'
+import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useTheme } from '@mui/material'
 
-type Props = {}
 
-const Row2 = (props: Props) => {
+const Row2 = () => {
   const { palette } = useTheme();
-  const { data, isLoading, error } = useGetDeviceDataQuery();
+  const { data } = useGetDeviceDataQuery();
  
   const deviceIdToFilter = "GPU-bbc80d76-6599-a3e1-0cb6-db0b4fb59df6";
  

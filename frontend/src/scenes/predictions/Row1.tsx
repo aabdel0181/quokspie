@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import DashboardBox from '../../components/DashboardBox';
 import { useGetDeviceDataQuery } from '../../state/api';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, defs, linearGradient, stop } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import { useTheme } from '@mui/material/styles';
 import BoxHeader from '../../components/BoxHeader';
 

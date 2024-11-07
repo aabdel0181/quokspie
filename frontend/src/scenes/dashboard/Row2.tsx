@@ -1,15 +1,14 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import DashboardBox from '../../components/DashboardBox'
 import { useGetDeviceDataQuery } from '../../state/api'
 import BoxHeader from '../../components/BoxHeader'
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useTheme } from '@mui/material'
 
-type Props = {}
 
-const Row2 = (props: Props) => {
+const Row2 = () => {
   const { palette } = useTheme();
-  const { data, isLoading, error } = useGetDeviceDataQuery();
+  const { data } = useGetDeviceDataQuery();
 
   const deviceIdToFilter = "GPU-eeeb2355-a08f-ee62-eead-751f2c632aba";
  
@@ -40,6 +39,7 @@ const powerUsageData = useMemo(() => {
                 <BoxHeader
                     title="Temperature Over Time"
                     subtitle="Visualizing temperature of devices over time"
+                    sideText=""
                 />
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
