@@ -1,13 +1,19 @@
+import AWS from "aws-sdk";
+import deviceRoutes from "./routes/deviceRoutes.js"; // Updated route import
 import express from "express";
 import bodyParser from "body-parser";
-import AWS from "aws-sdk";
+import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet";
 import morgan from "morgan";
-import deviceRoutes from "./routes/deviceRoutes.js"; // Updated route import
+import kpiRoutes from "./routes/kpi.js";
+import productRoutes from "./routes/product.js";
+import KPI from "./models/KPI.js";
+import Product from "./models/Product.js";
+import { kpis, products } from "./data/data.js";
 
-// load env variables
+// Load environment variables
 dotenv.config();
 
 /* CONFIGURATIONS */
@@ -20,6 +26,29 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 
+console.log("hello");
+
+/* ROUTES */
+app.use("/kpi", kpiRoutes);
+app.use("/product", productRoutes);
+
+/* MONGOOSE SETUP */
+const PORT = process.env.PORT || 9000;
+mongoose
+    .connect(process.env.MONGO_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    })
+    .then(async () => {
+        app.listen(PORT, () => console.log(`Server Port: ${PORT}`));
+        
+        //* ADD DATA ONE TIME ONLY OR AS NEEDED
+        //await mongoose.connection.db.dropDatabase();
+        //KPI.insertMany(kpis);
+        //Product.insertMany(products);
+    })
+    .catch((error) => console.log(`${error} did not connect`));
+
 // AWS SDK Configuration for DynamoDB
 AWS.config.update({
     region: process.env.AWS_REGION,
@@ -29,9 +58,5 @@ AWS.config.update({
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
-// route setup (pass dynamoDB client to each route)
+// Route setup (pass DynamoDB client to deviceRoutes)
 app.use("/api", deviceRoutes(dynamoDB));
-
-/* SERVER SETUP */
-const PORT = process.env.PORT || 9000;
-app.listen(PORT, () => console.log(`Server Port: ${PORT}`));

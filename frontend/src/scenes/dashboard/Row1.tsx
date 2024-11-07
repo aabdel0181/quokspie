@@ -33,6 +33,14 @@ const Row1 = () => {
         }));
     }, [data]);
 
+    // Process data for PowerUsage chart
+    const powerUsageData = useMemo(() => {
+        return data?.map(({ Timestamp, PowerUsage }) => ({
+            name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
+            value: PowerUsage,
+        }));
+    }, [data]);
+
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div>Error loading data.</div>;
 
@@ -55,12 +63,11 @@ const Row1 = () => {
                             bottom: 20,
                         }}
                     >
-                        <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" tickLine={false} style={{ fontSize: "10px" }} />
                         <YAxis tickLine={false} style={{ fontSize: "10px" }} />
                         <Tooltip />
                         <Legend />
-                        <Line type="monotone" dataKey="value" stroke={palette.primary.main} />
+                        <Line type="monotone" dataKey="value" stroke={palette.primary.main} dot={false} />
                     </LineChart>
                 </ResponsiveContainer>
             </DashboardBox>
@@ -82,12 +89,11 @@ const Row1 = () => {
                             bottom: 20,
                         }}
                     >
-                        <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" tickLine={false} style={{ fontSize: "10px" }} />
                         <YAxis tickLine={false} style={{ fontSize: "10px" }} />
                         <Tooltip />
                         <Legend />
-                        <Line type="monotone" dataKey="value" stroke={palette.secondary.main} />
+                        <Line type="monotone" dataKey="value" stroke={palette.secondary.main} dot={false} />
                     </LineChart>
                 </ResponsiveContainer>
             </DashboardBox>
@@ -109,12 +115,38 @@ const Row1 = () => {
                             bottom: 20,
                         }}
                     >
+                        <XAxis dataKey="name" tickLine={false} style={{ fontSize: "10px" }} />
+                        <YAxis tickLine={false} style={{ fontSize: "10px" }} />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="value" stroke={palette.error.main} dot={false} />
+                    </LineChart>
+                </ResponsiveContainer>
+            </DashboardBox>
+
+            {/* PowerUsage Chart */}
+            <DashboardBox gridArea="d">
+                <BoxHeader
+                    title="Power Usage Over Time"
+                    subtitle="Visualizing power usage of devices over time"
+                    sideText="Last updated"
+                />
+                <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                        data={powerUsageData}
+                        margin={{
+                            top: 20,
+                            right: 20,
+                            left: 0,
+                            bottom: 20,
+                        }}
+                    >
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" tickLine={false} style={{ fontSize: "10px" }} />
                         <YAxis tickLine={false} style={{ fontSize: "10px" }} />
                         <Tooltip />
                         <Legend />
-                        <Line type="monotone" dataKey="value" stroke={palette.error.main} />
+                        <Line type="monotone" dataKey="value" stroke={palette.info.main} dot={false} />
                     </LineChart>
                 </ResponsiveContainer>
             </DashboardBox>

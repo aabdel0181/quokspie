@@ -26,7 +26,7 @@ export const api = createApi({
             providesTags: ["Products"],
         }),
         getDeviceData: build.query<Array<GetDeviceDataResponse>, void>({
-            query: () => "api/devices",
+            query: () => "api/devices/",
             providesTags: ["Devices"],
         }),
     }),
