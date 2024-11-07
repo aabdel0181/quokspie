@@ -1,3 +1,24 @@
+# Build directories
 nvml-python/env
 *build/
 *.env
+
+# IDE files
+.vscode/
+.idea/
+
+# Compiled files
+*.exe
+*.dll
+*.lib
+*.o
+*.obj
+
+# Qt-specific
+moc_*
+ui_*
+qrc_*
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
