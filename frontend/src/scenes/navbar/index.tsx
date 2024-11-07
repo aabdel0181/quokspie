@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import PixIcon from '@mui/icons-material/Pix';
 import { Box, Typography, useTheme } from '@mui/material';
 import FlexBetween from '../../components/FlexBetween';
+import logo from '@/assets/quokspy.png';  // 👈 Add this import
 
 type Props = {};
 
@@ -13,12 +14,20 @@ const Navbar = (props: Props) => {
     <FlexBetween mb="0.25rem" p="0.5rem 0rem" color={palette.grey[300]}>
         {/* LEFT SIDE */}
         <FlexBetween gap="0.75rem">
-            <PixIcon sx = {{ fontSize: "28px"}} />
-            <Typography variant="h4" fontSize="20px">
-                Kwakspee
+            <Box
+                component="img"
+                src={logo}
+                alt="logo"
+                sx={{
+                    height: 84,  // Match the original PixIcon size
+                    width: 84,
+                    objectFit: 'contain'
+                }}
+            />
+            <Typography variant="h4" fontSize="30px">
+                Quokspie
             </Typography>
         </FlexBetween>
-
         {/* RIGHT SIDE */}
         <FlexBetween gap="2rem">
             <Box sx={{ "&:hover": { color: palette.primary[100] } }}>
