@@ -7,7 +7,7 @@ import Row3 from './Row3';
 
 
 const gridTemplateLargeScreens = `
-    "a b" 
+    "a b"
     "a b"
     "a b"
     "c d"
@@ -38,7 +38,7 @@ const Dashboard = () => {
     sx={
         isAboveMediumScreens? {
             gridTemplateColumns: "repeat(2, minmax(370px, 1fr))",
-            gridTemplateRows: "repeat(6, minmax(80px, 1fr))",
+            gridTemplateRows: "repeat(10, minmax(80px, 1fr))",
             gridTemplateAreas: gridTemplateLargeScreens,
         } : {
             gridAutoColumns: "1fr",
