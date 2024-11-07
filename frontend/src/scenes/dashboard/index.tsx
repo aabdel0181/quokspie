@@ -19,8 +19,6 @@ const gridTemplateSmallScreens = `
     "a"
     "a"
     "a"
-    "a"
-    "b"
     "b"
     "b"
     "b"
@@ -30,23 +28,6 @@ const gridTemplateSmallScreens = `
     "d"
     "d"
     "d"
-    "e"
-    "e"
-    "f"
-    "f"
-    "f"
-    "g"
-    "g"
-    "g"
-    "h"
-    "h"
-    "h"
-    "h"
-    "h"
-    "i"
-    "i"
-    "j"
-    "j"
 `
 
 
@@ -68,7 +49,6 @@ const Dashboard = () => {
     >
         <Row1 />
         <Row2 />
-        <Row3 />
     </Box>;
 };
 
