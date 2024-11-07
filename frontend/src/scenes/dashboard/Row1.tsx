@@ -12,7 +12,7 @@ const Row1 = () => {
     // Process data for ClockSpeed chart
     const clockSpeedData = useMemo(() => {
         return data?.map(({ Timestamp, ClockSpeed }) => ({
-            name: new Date(Timestamp).toLocaleTimeString(), // Format timestamp for the x-axis
+            name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
             value: ClockSpeed,
         }));
     }, [data]);
@@ -20,7 +20,7 @@ const Row1 = () => {
     // Process data for MemoryUsage chart
     const memoryUsageData = useMemo(() => {
         return data?.map(({ Timestamp, MemoryUsed }) => ({
-            name: new Date(Timestamp).toLocaleTimeString(), // Format timestamp for the x-axis
+            name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
             value: MemoryUsed,
         }));
     }, [data]);
@@ -28,7 +28,7 @@ const Row1 = () => {
     // Process data for Temperature chart
     const temperatureData = useMemo(() => {
         return data?.map(({ Timestamp, Temperature }) => ({
-            name: new Date(Timestamp).toLocaleTimeString(), // Format timestamp for the x-axis
+            name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
             value: Temperature,
         }));
     }, [data]);
