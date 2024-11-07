@@ -9,21 +9,27 @@ const Row1 = () => {
     const { palette } = useTheme();
     const { data, isLoading, error } = useGetDeviceDataQuery();
 
-    // Process data for ClockSpeed chart
+    const deviceIdToFilter = "GPU-eeeb2355-a08f-ee62-eead-751f2c632aba";
+
+    // Filter and process data for ClockSpeed chart
     const clockSpeedData = useMemo(() => {
-        return data?.map(({ Timestamp, ClockSpeed }) => ({
-            name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
-            value: ClockSpeed,
-        }));
+        return data
+            ?.filter(({ DeviceId }) => DeviceId === deviceIdToFilter) // Filter by DeviceId
+            .map(({ Timestamp, ClockSpeed }) => ({
+                name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
+                value: ClockSpeed,
+            }));
     }, [data]);
 
-    // Process data for MemoryUsage chart
+    // Filter and process data for MemoryUsage chart
     const memoryUsageData = useMemo(() => {
-        return data?.map(({ Timestamp, MemoryUsed }) => ({
-            name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
-            value: MemoryUsed,
-        }));
-    }, [data]);
+      return data
+          ?.filter(({ DeviceId }) => DeviceId === deviceIdToFilter) // Filter by DeviceId
+          .map(({ Timestamp, MemoryUsed }) => ({
+              name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
+              value: MemoryUsed,
+          }));
+  }, [data]);
 
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div>Error loading data.</div>;
