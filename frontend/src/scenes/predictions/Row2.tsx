@@ -1,30 +1,35 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import DashboardBox from '../../components/DashboardBox'
-import { useGetKpisQuery, useGetProductsQuery, useGetDeviceDataQuery } from '../../state/api'
+import { useGetDeviceDataQuery } from '../../state/api'
 import BoxHeader from '../../components/BoxHeader'
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis, Legend } from 'recharts'
+import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useTheme } from '@mui/material'
 
-type Props = {}
 
-const Row2 = (props: Props) => {
+const Row2 = () => {
   const { palette } = useTheme();
-  const { data, isLoading, error } = useGetDeviceDataQuery();
+  const { data } = useGetDeviceDataQuery();
  
-  // Process data for Temperature chart
+  const deviceIdToFilter = "GPU-bbc80d76-6599-a3e1-0cb6-db0b4fb59df6";
+ 
+  // Filter and process data for Temperature chart
   const temperatureData = useMemo(() => {
-    return data?.map(({ Timestamp, Temperature }) => ({
-        name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
-        value: Temperature,
-    }));
+    return data
+        ?.filter(({ DeviceId }) => DeviceId === deviceIdToFilter) // Filter by DeviceId
+        .map(({ Timestamp, Temperature }) => ({
+            name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
+            value: Temperature,
+        }));
 }, [data]);
 
-// Process data for PowerUsage chart
+// Filter and process data for PowerUsage chart
 const powerUsageData = useMemo(() => {
-    return data?.map(({ Timestamp, PowerUsage }) => ({
-        name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
-        value: PowerUsage,
-    }));
+  return data
+      ?.filter(({ DeviceId }) => DeviceId === deviceIdToFilter) // Filter by DeviceId
+      .map(({ Timestamp, PowerUsage }) => ({
+          name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
+          value: PowerUsage,
+      }));
 }, [data]);
 
   return (
@@ -34,24 +39,29 @@ const powerUsageData = useMemo(() => {
                 <BoxHeader
                     title="Temperature Over Time"
                     subtitle="Visualizing temperature of devices over time"
-                    sideText="Last updated"
+                    sideText=""
                 />
                 <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
+                    <AreaChart
                         data={temperatureData}
                         margin={{
-                            top: 20,
-                            right: 20,
-                            left: 0,
-                            bottom: 20,
+                          top: 20,
+                          right: 30,
+                          left: -15,
+                          bottom: 60,
                         }}
                     >
+                        <defs>
+                            <linearGradient id="colorTemperature" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor={palette.error.main} stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor={palette.error.main} stopOpacity={0}/>
+                            </linearGradient>
+                        </defs>
                         <XAxis dataKey="name" tickLine={false} style={{ fontSize: "10px" }} />
                         <YAxis tickLine={false} style={{ fontSize: "10px" }} />
                         <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="value" stroke={palette.error.main} dot={false} />
-                    </LineChart>
+                        <Area type="monotone" dataKey="value" stroke={palette.error.main} fill="url(#colorTemperature)" />
+                    </AreaChart>
                 </ResponsiveContainer>
             </DashboardBox>
 
@@ -60,24 +70,29 @@ const powerUsageData = useMemo(() => {
                 <BoxHeader
                     title="Power Usage Over Time"
                     subtitle="Visualizing power usage of devices over time"
-                    sideText="Last updated"
+                    sideText=""
                 />
                 <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
+                    <AreaChart
                         data={powerUsageData}
                         margin={{
-                            top: 20,
-                            right: 20,
-                            left: 0,
-                            bottom: 20,
+                          top: 20,
+                          right: 30,
+                          left: -15,
+                          bottom: 60,
                         }}
                     >
+                        <defs>
+                            <linearGradient id="colorPowerUsage" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor={palette.info.main} stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor={palette.info.main} stopOpacity={0}/>
+                            </linearGradient>
+                        </defs>
                         <XAxis dataKey="name" tickLine={false} style={{ fontSize: "10px" }} />
                         <YAxis tickLine={false} style={{ fontSize: "10px" }} />
                         <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="value" stroke={palette.info.main} dot={false} />
-                    </LineChart>
+                        <Area type="monotone" dataKey="value" stroke={palette.info.main} fill="url(#colorPowerUsage)" />
+                    </AreaChart>
                 </ResponsiveContainer>
             </DashboardBox>
     </>
