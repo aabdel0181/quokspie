@@ -20,12 +20,21 @@ async function create_tables(db) {
         user_id int PRIMARY KEY AUTO_INCREMENT, \
         username VARCHAR(255), \
         hashed_password VARCHAR(255), \
-        linked_nconst VARCHAR(10), \
-        FOREIGN KEY (linked_nconst) REFERENCES names(nconst) \
+        first_name VARCHAR(255), \
+        last_name VARCHAR(255) \
         );'
     );
 
-    return await Promise.all([q1]);
+    // gpus table
+    var q2 = db.create_tables('CREATE TABLE IF NOT EXISTS gpus ( \
+        gpu_id VARCHAR(255) PRIMARY KEY, \
+        model VARCHAR(255), \
+        user_id int, \
+        FOREIGN KEY (user_id) REFERENCES users(user_id) \
+        );'
+    );
+
+    return await Promise.all([q1, q2]);
 }
 
 // Database connection setup

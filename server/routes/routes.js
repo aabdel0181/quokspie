@@ -159,52 +159,19 @@ var postNewPhoto = async function (req, res) {
 
 }
 
-var postNewNconst = async function (req, res) {
-    const username = req.params.username;
-    if (!helper.isLoggedIn(req, username)) {
-        return res.status(403).send({ error: 'Not logged in.' });
-    }
-
-    const { nconst } = req.body;
-    if (!nconst) {
-        return res.status(400).send({ error: 'One or more of the fields you entered was empty, please try again.' });
-    }
-
-    try {
-        const num_rows = await db.insert_items(`UPDATE users SET linked_nconst = '${nconst}' WHERE username = '${username}';`)
-
-        const actor_name_res = await db.send_sql(`SELECT primaryName FROM names WHERE nconst = '${nconst}';`);
-        console.log(actor_name_res);
-
-        const actor_name = JSON.parse(JSON.stringify(actor_name_res))[0].primaryName;
-        console.log(actor_name);
-
-        const newPost = await db.send_sql(`INSERT INTO posts (content, author_id) VALUES ('${username} is now linked to ${actor_name}.', ${req.session.user_id});`);
-        console.log("Uploaded post successfully");
-        return res.status(200).send({ username: username });
-    } catch {
-        return res.status(500).send({ error: 'Error querying database.' });
-    }
-}
-
 // POST /register 
 var postRegister = async function (req, res) {
-    // Register a user with given body parameters
-    const { username, password, linked_id, s_hashtags } = req.body;
+    const { username, password, gpuModel, gpuSerial } = req.body;
     const photo = req.file;
-    const hashtags = JSON.parse(s_hashtags);
 
-    console.log(req.body);
-
-    // Error checking
-    if (!username || !password || !linked_id || !helper.isOK(username) || !helper.isOK(password) || !helper.isOK(linked_id) || !photo) {
-        return res.status(400).send({ error: 'One or more of the fields you entered was empty, please try again.' });
+    // Ensure all required fields are provided
+    if (!username || !password || !gpuModel || !gpuSerial || !photo) {
+        return res.status(400).send({ error: 'One or more fields are missing.' });
     }
 
-    // Check if account already exist
+    // Check if the username already exists in the database
     try {
-        username_rows = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`);
-        console.log(username_rows);
+        const username_rows = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`);
         if (username_rows.length > 0) {
             return res.status(409).send({ error: 'An account with this username already exists, please try again.' });
         }
@@ -212,60 +179,51 @@ var postRegister = async function (req, res) {
         return res.status(500).send({ error: 'Error querying database.' });
     }
 
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    store = async function (err, hash) {
-        // Store in db
-        if (err) {
-            return res.status(500).send({ error: 'Error querying database.' });
-        }
-
-        const params = {
-            Bucket: config.photoBucket,
-            Key: `${username}`,
-            Body: photo.buffer,
-            ContentType: photo.mimetype
-        };
-
-        const command = new PutObjectCommand(params);
-
-        try {
-            // Upload the file to S3
-            const data = await s3.send(command);
-        } catch (err) {
-            console.error("Error uploading to S3", err);
-            res.status(500).send("Error registering user");
-        }
-
-        try {
-            const num_rows = await db.insert_items(`INSERT INTO users (username, hashed_password, linked_nconst) VALUES ('${username}', '${hash}', '${linked_id}')`)
-        } catch {
-            return res.status(500).send({ error: 'Error querying database.' });
-        }
-
-        // Hashtags
-        try {
-            const result = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`)
-            const hashtag_success = processHashtags(result[0].user_id, hashtags);
-            if (!hashtag_success) {
-                return res.status(500).send({ error: 'Error querying database.' });
-            }
-        } catch {
-            return res.status(500).send({ error: 'Error querying database.' });
-        }
-
-        try {
-            const result = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`)
-            req.session.user_id = result[0].user_id;
-            req.session.username = username;
-
-            return res.status(200).send({ username: username });
-        } catch {
-            return res.status(500).send({ error: 'Error querying database.' });
-        }
+    // Upload photo to S3
+    const params = {
+        Bucket: config.photoBucket,
+        Key: `${username}`,
+        Body: photo.buffer,
+        ContentType: photo.mimetype
+    };
+    const command = new PutObjectCommand(params);
+    try {
+        await s3.send(command);
+    } catch (err) {
+        console.error("Error uploading to S3", err);
+        return res.status(500).send("Error registering user");
     }
-    // Salt and hash
-    helper.encryptPassword(password, store);
+
+    // Insert user into the users table
+    try {
+        const insertUserQuery = `INSERT INTO users (username, hashed_password) VALUES ('${username}', '${hashedPassword}')`;
+        await db.send_sql(insertUserQuery);
+    } catch {
+        return res.status(500).send({ error: 'Error inserting user into the database.' });
+    }
+
+    // Insert GPU information into the gpus table
+    try {
+        const insertGpuQuery = `INSERT INTO gpus (model, gpu_id, user_id) VALUES ('${gpuModel}', '${gpuSerial}', (SELECT user_id FROM users WHERE username = '${username}'))`;
+        await db.send_sql(insertGpuQuery);
+    } catch {
+        return res.status(500).send({ error: 'Error inserting GPU data into the database.' });
+    }
+
+    // Set session variables for the user
+    try {
+        const result = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`);
+        req.session.user_id = result[0].user_id;
+        req.session.username = username;
+        return res.status(200).send({ username: username });
+    } catch {
+        return res.status(500).send({ error: 'Error setting session.' });
+    }
 };
+
 
 
 // POST /login
