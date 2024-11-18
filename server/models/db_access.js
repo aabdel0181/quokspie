@@ -1,5 +1,5 @@
 const mysql = require('mysql');
-const config = require('../config.json'); // Load configuration
+const config = require('../config.json'); // load configuration
 const process = require('process');
 require('dotenv').config()
 
