@@ -54,6 +54,30 @@ const Navbar = (props: Props) => {
                     Taru's GPU
                 </Link>
             </Box>
+            <Box sx={{ "&:hover": { color: palette.primary[100] } }}>
+                <Link
+                    to="/signup"
+                    onClick={() => setSelected("signup")}
+                    style={{
+                        color: selected === "predictions" ? "inherit" : palette.grey[700],
+                        textDecoration: "inherit"
+                    }}
+                >
+                    Sign Up
+                </Link>
+            </Box>
+            <Box sx={{ "&:hover": { color: palette.primary[100] } }}>
+                <Link
+                    to="/login"
+                    onClick={() => setSelected("login")}
+                    style={{
+                        color: selected === "predictions" ? "inherit" : palette.grey[700],
+                        textDecoration: "inherit"
+                    }}
+                >
+                    Login
+                </Link>
+            </Box>
         </FlexBetween>
     </FlexBetween>
     );

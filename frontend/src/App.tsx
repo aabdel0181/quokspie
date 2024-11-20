@@ -7,8 +7,12 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Navbar from "./scenes/navbar";
 import Dashboard from "./scenes/dashboard";
 import Predictions from "./scenes/predictions";
+import Login from "./scenes/login/Login";
+import Signup from "./scenes/login/Signup";
+
 function App() {
-  const theme = useMemo(() => createTheme(themeSettings), [])
+  const theme = useMemo(() => createTheme(themeSettings), []);
+
   return (
     <div className="app">
       <BrowserRouter>
@@ -18,10 +22,9 @@ function App() {
             <Navbar />
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route 
-              path="/predictions" 
-              element={<Predictions />} 
-              />
+              <Route path="/predictions" element={<Predictions />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
             </Routes>
           </Box>
         </ThemeProvider>
@@ -31,4 +34,3 @@ function App() {
 }
 
 export default App;
-

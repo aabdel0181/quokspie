@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios'; // Import Axios
-import config from '../../config.json';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -14,44 +13,36 @@ import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { indigo } from '@mui/material/colors';
 
+axios.defaults.withCredentials = true;
 
-axios.defaults.withCredentials = true
 const defaultTheme = createTheme();
 
-export default function Login() {
+const Login: React.FC = () => {
   const navigate = useNavigate();
 
-  // Set appropriate state variables for username and password 
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-
-  const rootURL = config.serverRootURL;
-
-  const handleLogin = async () => {
-    console.log(rootURL);
-    console.log(`${rootURL}/login`);
-    try {
-      console.log("test");
-      await axios.post(`${rootURL}/login`, {
-        username: username,
-        password: password
-      })
-      navigate(`/${username}/home`);
-    } catch (err) {
-      alert('Log in failed.');
-    }
-  };
-
-  const logout = async () => {
-    try {
-      await axios.get(`${rootURL}/logout`);
-    } catch (err) {
-    }
-  }
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const logout = async () => {
+      try {
+        await axios.get('/api/logout');
+      } catch (err) {
+        console.error('Error logging out', err);
+      }
+    };
     logout();
   }, []);
+
+  const handleLogin = async () => {
+    try {
+      await axios.post('/api/login', { username, password });
+      navigate(`/${username}/home`);
+    } catch (err) {
+      setError('Invalid username or password.');
+    }
+  };
 
   return (
     <ThemeProvider theme={defaultTheme}>
@@ -63,11 +54,18 @@ export default function Login() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            bgcolor: 'white', // White background
+            padding: 4, // Add padding
+            borderRadius: 2, // Rounded corners
+            boxShadow: 3, // Add subtle shadow
           }}
         >
           <Avatar sx={{ width: 100, height: 100, bgcolor: indigo[900] }}>
             <LockOutlinedIcon sx={{ width: 60, height: 60 }} />
           </Avatar>
+          <Typography component="h1" variant="h5" sx={{ mt: 2 }}>
+            Sign In
+          </Typography>
           <Box sx={{ mt: 1 }}>
             <TextField
               margin="normal"
@@ -78,7 +76,7 @@ export default function Login() {
               name="username"
               autoFocus
               value={username}
-              onChange={e => setUsername(e.target.value)}
+              onChange={(e) => setUsername(e.target.value)}
             />
             <TextField
               margin="normal"
@@ -89,23 +87,33 @@ export default function Login() {
               type="password"
               id="password"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
             />
+            {error && (
+              <Typography color="error" sx={{ mt: 2 }}>
+                {error}
+              </Typography>
+            )}
             <Button
-              type="submit"
+              type="button"
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2, bgcolor: indigo[900] }}
               onClick={handleLogin}
             >
-              Sign In
+              Login
             </Button>
-            <p>Don't have an account? <Link href="/signup">
-              Sign Up
-            </Link></p>
+            <Typography>
+              Don&apos;t have an account?{' '}
+              <Link href="/signup" variant="body2">
+                Sign Up
+              </Link>
+            </Typography>
           </Box>
         </Box>
       </Container>
     </ThemeProvider>
-  )
-}
+  );
+};
+
+export default Login;
