@@ -1,13 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import PixIcon from '@mui/icons-material/Pix';
 import { Box, Typography, useTheme } from '@mui/material';
 import FlexBetween from '../../components/FlexBetween';
 import logo from '@/assets/quokspy.png';  // 👈 Add this import
 
-type Props = {};
-
-const Navbar = (props: Props) => {
+const Navbar = () => {
     const { palette } = useTheme();
     const [selected, setSelected] = useState("dashboard");
     return (

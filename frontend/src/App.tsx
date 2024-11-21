@@ -8,7 +8,7 @@ import Navbar from "./scenes/navbar";
 import Dashboard from "./scenes/dashboard";
 import Predictions from "./scenes/predictions";
 import Login from "./scenes/login/Login";
-import Signup from "./scenes/login/Signup";
+import Signup from "./scenes/Signup/Signup";
 
 function App() {
   const theme = useMemo(() => createTheme(themeSettings), []);
