@@ -15,6 +15,7 @@ const Signup: React.FC = () => {
     firstName: '',
     lastName: '',
     email: '',
+    username: '', // New username field
     password: '',
     confirmPassword: '',
     agreeToTerms: false,
@@ -28,10 +29,52 @@ const Signup: React.FC = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Add validation or form submission logic here
-    console.log(formData);
+
+    // Basic validation
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+    if (!formData.agreeToTerms) {
+      alert("You must agree to the terms and conditions");
+      return;
+    }
+
+    const payload = {
+      username: formData.username, // Username is now explicit
+      email: formData.email, // Optional, if you want to store email separately
+      password: formData.password,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      gpuModel: "SomeGPUModel", // Replace with actual GPU data if needed
+      gpuSerial: "12345", // Replace with actual GPU serial
+    };
+
+    try {
+      const response = await fetch('http://localhost:9000/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("User registered successfully:", data);
+        alert("Registration successful!");
+        // Redirect user to login or dashboard
+      } else {
+        const error = await response.json();
+        console.error("Registration failed:", error);
+        alert(`Error: ${error.error || "Registration failed"}`);
+      }
+    } catch (err) {
+      console.error("Network error:", err);
+      alert("Network error. Please try again later.");
+    }
   };
 
   return (
@@ -65,6 +108,15 @@ const Signup: React.FC = () => {
             variant="outlined"
             name="lastName"
             value={formData.lastName}
+            onChange={handleChange}
+            fullWidth
+            required
+          />
+          <TextField
+            label="Username" // New field for username
+            variant="outlined"
+            name="username"
+            value={formData.username}
             onChange={handleChange}
             fullWidth
             required
@@ -109,10 +161,11 @@ const Signup: React.FC = () => {
             }
             label="I agree to the terms and conditions"
           />
-          <Button type="submit"
-          fullWidth
-          variant="contained"
-          sx={{ mt: 3, mb: 2, bgcolor: indigo[900] }}
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, mb: 2, bgcolor: indigo[900] }}
           >
             Sign Up
           </Button>

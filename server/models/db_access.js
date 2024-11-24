@@ -65,3 +65,5 @@ export async function insert_items(query, params = []) {
 export function set_db_connection(db) {
     the_db = db;
 }
+
+

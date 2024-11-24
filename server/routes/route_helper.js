@@ -1,52 +1,23 @@
-const bcrypt = require('bcrypt');
+import bcrypt from 'bcrypt';
 
+export function encryptPassword(password, callback) {
+    bcrypt.hash(password, 10, callback);
+}
 
-var route_helper = function () {
-    return {
-        // Function for encrypting passwords WITH SALT
-        // Look at the bcrypt hashing routines
-        encryptPassword: (password, callback) => {
-            bcrypt.hash(password, 10, callback);
-        },
-
-        // Function that validates the user is actually logged in,
-        // which should only be possible if they've been authenticated
-        // It can look at either an ID (as an int) or a username (as a string)
-        isLoggedIn: (req, obj) => {
-            if (typeof obj === 'string' || obj instanceof String)
-                return req.session.username != null && req.session.username == obj;
-            else
-                return req.session.user_id != null && req.session.user_id == obj;
-        },
-
-        // Checks that every character is a space, letter, number, or one of the following: .,?,_
-        isOK: (str) => {
-            if (str == null)
-                return false;
-            for (var i = 0; i < str.length; i++) {
-                if (!/[A-Za-z0-9 \.\?,_]/.test(str[i])) {
-                    return false;
-                }
-            }
-            return true;
+export function isOK(str) {
+    if (str == null) return false;
+    for (let i = 0; i < str.length; i++) {
+        if (!/[A-Za-z0-9 \.\?,_]/.test(str[i])) {
+            return false;
         }
-    };
-};
-
-var encryptPassword = function (password, callback) {
-    return route_helper().encryptPassword(password, callback);
+    }
+    return true;
 }
 
-var isOK = function (req) {
-    return route_helper().isOK(req);
+export function isLoggedIn(req, obj) {
+    if (typeof obj === 'string' || obj instanceof String) {
+        return req.session.username != null && req.session.username === obj;
+    } else {
+        return req.session.user_id != null && req.session.user_id === obj;
+    }
 }
-
-var isLoggedIn = function (req, obj) {
-    return route_helper().isLoggedIn(req, obj);
-}
-
-module.exports = {
-    isOK,
-    isLoggedIn,
-    encryptPassword
-};

@@ -1,13 +1,14 @@
-const dbsingleton = require('../models/db_access.js');
-const bcrypt = require('bcrypt');
-const helper = require('../routes/route_helper.js');
+import * as dbsingleton from '../models/db_access.js';
+import bcrypt from 'bcrypt';
+import { encryptPassword, isOK, isLoggedIn } from '../routes/route_helper.js';
+
 const db = dbsingleton;
 
 // GET /getUserInfo
-var getUserInfo = async function (req, res) {
+export const getUserInfo = async function (req, res) {
     const username = req.params.username;
 
-    if (!helper.isLoggedIn(req, username)) {
+    if (!isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
@@ -24,8 +25,8 @@ var getUserInfo = async function (req, res) {
         );
 
         return res.status(200).send({
-            user: userData, // Includes username, first_name, and last_name
-            gpus: gpu_rows, // Array of associated GPUs
+            user: userData,
+            gpus: gpu_rows,
         });
     } catch (err) {
         console.error('Database error:', err);
@@ -34,15 +35,15 @@ var getUserInfo = async function (req, res) {
 };
 
 // POST /update-username
-var postNewUsername = async function (req, res) {
+export const postNewUsername = async function (req, res) {
     const old_username = req.params.username;
 
-    if (!helper.isLoggedIn(req, old_username)) {
+    if (!isLoggedIn(req, old_username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
     const { username } = req.body;
-    if (!username || !helper.isOK(username)) {
+    if (!username || !isOK(username)) {
         return res.status(400).send({ error: 'Invalid username.' });
     }
 
@@ -64,15 +65,15 @@ var postNewUsername = async function (req, res) {
 };
 
 // POST /update-password
-var postNewPw = async function (req, res) {
+export const postNewPw = async function (req, res) {
     const username = req.params.username;
 
-    if (!helper.isLoggedIn(req, username)) {
+    if (!isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
     const { password } = req.body;
-    if (!password || !helper.isOK(password)) {
+    if (!password || !isOK(password)) {
         return res.status(400).send({ error: 'Invalid password.' });
     }
 
@@ -89,10 +90,10 @@ var postNewPw = async function (req, res) {
 };
 
 // POST /register
-var postRegister = async function (req, res) {
-    const { username, password, gpuModel, gpuSerial } = req.body;
+export const postRegister = async function (req, res) {
+    const { username, password, firstName, lastName, gpuModel, gpuSerial } = req.body;
 
-    if (!username || !password || !gpuModel || !gpuSerial) {
+    if (!username || !password || !firstName || !lastName || !gpuModel || !gpuSerial) {
         return res.status(400).send({ error: 'Missing required fields.' });
     }
 
@@ -104,25 +105,23 @@ var postRegister = async function (req, res) {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        await db.send_sql(`INSERT INTO users (username, hashed_password) VALUES ('${username}', '${hashedPassword}')`);
-
         await db.send_sql(
-            `INSERT INTO gpus (model, gpu_id, user_id) VALUES ('${gpuModel}', '${gpuSerial}', (SELECT user_id FROM users WHERE username = '${username}'))`
+            `INSERT INTO users (username, hashed_password, first_name, last_name) VALUES ('${username}', '${hashedPassword}', '${firstName}', '${lastName}')`
         );
 
-        const user_rows = await db.send_sql(`SELECT username, first_name, last_name FROM users WHERE username = '${username}'`);
-        const gpu_rows = await db.send_sql(
-            `SELECT model, gpu_id FROM gpus WHERE user_id = (SELECT user_id FROM users WHERE username = '${username}')`
-        );
+        // await db.send_sql(
+        //     `INSERT INTO gpus (model, gpu_id, user_id) VALUES ('${gpuModel}', '${gpuSerial}', (SELECT user_id FROM users WHERE username = '${username}'))`
+        // );
 
-        req.session.user_id = (await db.send_sql(`SELECT user_id FROM users WHERE username = '${username}'`))[0].user_id;
+        const user_id = (
+            await db.send_sql(`SELECT user_id FROM users WHERE username = '${username}'`)
+        )[0].user_id;
+
+        // Set session variables
+        req.session.user_id = user_id;
         req.session.username = username;
 
-        return res.status(200).send({
-            message: 'User registered successfully.',
-            user: user_rows[0],
-            gpus: gpu_rows,
-        });
+        return res.status(200).send({ message: 'User registered successfully.', username });
     } catch (err) {
         console.error('Database error:', err);
         return res.status(500).send({ error: 'Error registering user.' });
@@ -130,11 +129,10 @@ var postRegister = async function (req, res) {
 };
 
 // POST /login
-var postLogin = async function (req, res) {
-    const username = req.body.username;
-    const password = req.body.password;
+export const postLogin = async function (req, res) {
+    const { username, password } = req.body;
 
-    if (!username || !password || !helper.isOK(username) || !helper.isOK(password)) {
+    if (!username || !password || !isOK(username) || !isOK(password)) {
         return res.status(400).send({ error: 'Invalid credentials.' });
     }
 
@@ -167,15 +165,15 @@ var postLogin = async function (req, res) {
 };
 
 // GET /logout
-var postLogout = function (req, res) {
+export const postLogout = function (req, res) {
     req.session.user_id = null;
     req.session.username = null;
     return res.status(200).send({ message: 'Logged out successfully.' });
 };
 
 // GET /check-username
-var checkUsername = async function (req, res) {
-    const username = req.query.username;
+export const checkUsername = async function (req, res) {
+    const { username } = req.query;
 
     if (!username) {
         return res.status(400).send({ error: 'Username is required.' });
@@ -190,7 +188,7 @@ var checkUsername = async function (req, res) {
     }
 };
 
-// Export routes
+// Export all routes as a single object
 const routes = {
     post_login: postLogin,
     post_register: postRegister,
@@ -201,4 +199,4 @@ const routes = {
     check_username: checkUsername,
 };
 
-module.exports = routes;
+export default routes;
