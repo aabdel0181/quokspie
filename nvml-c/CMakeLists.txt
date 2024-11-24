@@ -37,7 +37,7 @@ if(WIN32)
 
 else()
     # Locate NVML on Linux
-    find_library(NVML_LIB nvml HINTS /usr/local/cuda/lib64)
+    find_library(NVML_LIB libnvidia-ml.so HINTS /usr/local/cuda-12.6/lib64/stubs)
     if(NVML_LIB)
         target_link_libraries(gpu_odometer PRIVATE ${NVML_LIB})
     else()
