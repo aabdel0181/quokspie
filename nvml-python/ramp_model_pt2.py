@@ -91,12 +91,12 @@ def mttf_calculations(metrics):
 
     #Electromigration MTTF Calculation
     current = power / voltage
-    width = 10e-9
-    thickness = 50e-9
+    width = 16e-9
+    thickness = 32e-9
     area = width * thickness
 
-    j = current / area   #calculate current density
-    print("Current density is", j)
+    j = current / area   # Calculate current density
+    print("Current density: ", j)
     exponent_em = e_aem / (k * temperature)
     exp_value_em = safe_exp(exponent_em)
     #A_EM = MTTF_target_hours / ((j**(-1*n_em)) * math.exp(e_aem/(k*T_worst)))
@@ -116,11 +116,7 @@ def mttf_calculations(metrics):
 
     # Overall MTTF using Sum-of-Failure-Rates (SOFR)
     MTTF_overall = 1 / ((1 / MTTF_TDDB) + (1 / MTTF_TC) + (1 / MTTF_SM) + (1 / MTTF_EM))
-
-    print(f"Temperature (K): {temperature:.2f}, Voltage (V): {voltage:.2f}, Power (W): {power:.2f}")
-    print(f"MTTF (Runtime): {MTTF_overall:.2f} hours")
-    print(f"  MTTF_TDDB: {MTTF_TDDB:.2f} hours, MTTF_TC: {MTTF_TC:.2f} hours")
-
+    
     return MTTF_EM, MTTF_SM, MTTF_TDDB, MTTF_TC, MTTF_overall
 
 def main():
@@ -131,13 +127,15 @@ def main():
             MTTF_EM, MTTF_SM, MTTF_TDDB, MTTF_TC, MTTF_overall = mttf_calculations(metrics)
             print(f"Latest Metrics for Device {device_id}:")
             print(f"  Temperature: {metrics['Temperature']} °C")
-            print(f"  Clock Speed: {metrics['ClockSpeed']} MHz")
+            print(f"  Voltage: {metrics['Voltage']:.2f} V")
             print(f"  Power Usage: {metrics['PowerUsage']} W")
             print(f"  Delta_T: {metrics['DeltaT']} °C")
             print(f"MTTF Calculations:")
-            print(f"  MTTF_TDDB: {MTTF_TDDB / (365 * 24):.2f} years")
-            print(f"  MTTF_TC: {MTTF_TC / (365 * 24):.2f} years")
-            print(f"  Overall MTTF: {MTTF_overall/ (365 * 24):.2f} years")
+            print(f"  MTTF_EM: {MTTF_EM:.2f} hours")
+            print(f"  MTTF_SM: {MTTF_SM:.2f} hours")
+            print(f"  MTTF_TDDB: {MTTF_TDDB:.2f} hours")
+            print(f"  MTTF_TC: {MTTF_TC:.2f} hours")
+            print(f"  Overall MTTF: {MTTF_overall:.2f} hours")
         else:
             print(f"No metrics found for Device ID: {device_id}")
 
