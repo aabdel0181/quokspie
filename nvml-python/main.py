@@ -60,6 +60,12 @@ def gpu_prober(handle):
             else:
                 raise
 
+        try:
+            voltage = pynvml.nvmlDeviceGetGpuVoltage(handle)
+            voltage /= 1000 #from mV to V
+        except:
+            voltage = 1.0 #initializes voltage to 1.0 if not able to find it
+
         print(f"ID: {device_id}, Temp: {temperature} C, Clock: {clock_speed} MHz, Power: {last_power_reading} W, Memory Used: {memory_info.used / (1024 ** 2)} MB")
         
         # store data in DynamoDB table
@@ -68,14 +74,15 @@ def gpu_prober(handle):
             temperature=temperature,
             clock_speed=clock_speed,
             power_usage=last_power_reading,
-            memory_used=memory_info.used / (1024 ** 2)
+            memory_used=memory_info.used / (1024 ** 2),
+            voltage=voltage
         )
         
         # Poll regularly
         time.sleep(1)
         
 # Function to store metrics in DynamoDB table
-def store_metrics(device_id, temperature, clock_speed, power_usage, memory_used):
+def store_metrics(device_id, temperature, clock_speed, power_usage, memory_used, voltage):
     timestamp = datetime.now(timezone.utc)
     
     table.put_item(
@@ -85,7 +92,8 @@ def store_metrics(device_id, temperature, clock_speed, power_usage, memory_used)
             'Temperature': Decimal(temperature),
             'ClockSpeed': Decimal(clock_speed),
             'PowerUsage': Decimal(str(power_usage)),  # convert to string first to handle float to Decimal
-            'MemoryUsed': Decimal(str(memory_used))   # convert to string first to handle float to Decimal
+            'MemoryUsed': Decimal(str(memory_used)),   # convert to string first to handle float to Decimal
+            'Voltage': Decimal(str(voltage))
         }
     )
 
