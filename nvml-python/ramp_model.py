@@ -5,9 +5,30 @@ from decimal import Decimal
 
 load_dotenv()
 
-#Constants
+# CONSTANTS
+# Time-dependent dielectric breakdown
+a = 78
+b = -0.081
+X = 0.759
+Y = -66.8
+Z = -8.37e-4
+k = 8.617e-5  # Boltzmann constant in eV/K
+# Thermal cycling
+q = 2.35
+
+# SETUP
+# Assuming MTTF_target of 100 years, calculating A
+MTTF_target_years = 100
+MTTF_target_hours = MTTF_target_years * 365 * 24
+T_worst = 85 + 273.15  # Worst-case temperature (K)
+V_worst = 1.1          # Worst-case voltage (V)
+AF_worst = 1.0         # Worst-case activity factor (example)
+delta_T_worst = 30.0   # Worst-case temperature swing (C)
+A_TDDB = MTTF_target_hours / ((V_worst**b) * (T_worst**X) * \
+                  (10**(Y / T_worst)) * (10**(Z * V_worst / T_worst)))
+A_TC = MTTF_target_hours * (delta_T_worst**q)
+
 activation_energy = 0.9
-boltzmann_constant = 8.617e-5
 n = 1.1
 
 # Initialize DynamoDB
