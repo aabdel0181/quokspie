@@ -109,9 +109,9 @@ def main():
             print(f"  Power Usage: {metrics['PowerUsage']} W")
             print(f"  Delta_T: {metrics['DeltaT']} °C")
             print(f"MTTF Calculations:")
-            print(f"  MTTF_TDDB: {MTTF_TDDB:.2f} hours")
-            print(f"  MTTF_TC: {MTTF_TC:.2f} hours")
-            print(f"  Overall MTTF: {MTTF_overall:.2f} hours")
+            print(f"  MTTF_TDDB: {MTTF_TDDB / (365 * 24):.2f} years")
+            print(f"  MTTF_TC: {MTTF_TC / (365 * 24):.2f} years")
+            print(f"  Overall MTTF: {MTTF_overall/ (365 * 24):.2f} years")
         else:
             print(f"No metrics found for Device ID: {device_id}")
 
