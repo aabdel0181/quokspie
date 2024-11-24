@@ -1,5 +1,5 @@
-const dbaccess = require('./db_access');
-const config = require('../config.json'); // load configuration
+import * as dbaccess from './db_access.js';
+import config from '../config.json' assert { type: 'json' };
 
 function sendQueryOrCommand(db, query, params = []) {
     return new Promise((resolve, reject) => {

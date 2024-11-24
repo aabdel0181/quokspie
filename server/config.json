@@ -1,10 +1,9 @@
 {
     "database": {
-        "host": TODO,
-        "port": "3306",
-        "database": TODO
-    },
-    "serverPort": "8080",
-    "awsRegion": "us-east-1",
-    "port": 4567
+        "host": "quokspie-users.cvuaukwuee4v.us-east-1.rds.amazonaws.com", 
+        "user": "admin",
+        "password": "senior_design_team_20",
+        "database": "quokspie-users",
+        "port": 3306
+    }
 }
