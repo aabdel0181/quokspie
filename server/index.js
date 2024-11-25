@@ -49,6 +49,7 @@ app.use("/product", productRoutes);
 app.post("/register", routes.post_register); // Register route
 app.post("/login", routes.post_login);
 app.post("/logout", routes.post_logout);
+app.get("/session-check", routes.check_session);
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 9000;

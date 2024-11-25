@@ -197,6 +197,14 @@ export const checkUsername = async function (req, res) {
     }
 };
 
+// GET /session-check
+export const checkSession = (req, res) => {
+    if (req.session && req.session.user_id) {
+        return res.status(200).send({ authenticated: true, username: req.session.username });
+    }
+    res.status(401).send({ authenticated: false });
+};
+
 // Export all routes as a single object
 const routes = {
     post_login: postLogin,
@@ -206,6 +214,7 @@ const routes = {
     post_new_pw: postNewPw,
     get_user_info: getUserInfo,
     check_username: checkUsername,
+    check_session: checkSession,
 };
 
 export default routes;
