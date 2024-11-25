@@ -170,11 +170,15 @@ export const postLogin = async function (req, res) {
   };  
 
 // GET /logout
-export const postLogout = function (req, res) {
-    req.session.user_id = null;
-    req.session.username = null;
-    return res.status(200).send({ message: 'Logged out successfully.' });
-};
+export const postLogout = (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Error destroying session:', err);
+        return res.status(500).send({ message: 'Logout failed' });
+      }
+      res.status(200).send({ message: 'Logged out successfully' });
+    });
+  };
 
 // GET /check-username
 export const checkUsername = async function (req, res) {

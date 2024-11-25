@@ -9,6 +9,7 @@ import Dashboard from "./scenes/dashboard";
 import Predictions from "./scenes/predictions";
 import Login from "./scenes/login/Login";
 import Signup from "./scenes/Signup/Signup";
+import Logout from "./scenes/logout/Logout";
 
 // Authentication check
 const isAuthenticated = () => Boolean(localStorage.getItem("authToken")); 
