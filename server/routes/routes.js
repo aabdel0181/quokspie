@@ -130,39 +130,44 @@ export const postRegister = async function (req, res) {
 
 // POST /login
 export const postLogin = async function (req, res) {
+    console.log("in postLogin");
+
     const { username, password } = req.body;
-
+  
     if (!username || !password || !isOK(username) || !isOK(password)) {
-        return res.status(400).send({ error: 'Invalid credentials.' });
+      return res.status(400).send({ error: 'Invalid credentials.' });
     }
-
+  
     try {
-        const user_rows = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`);
-        if (user_rows.length === 0) {
-            return res.status(401).send({ error: 'Invalid username or password.' });
-        }
-
-        const user = user_rows[0];
-        const isPasswordCorrect = await bcrypt.compare(password, user.hashed_password);
-
-        if (!isPasswordCorrect) {
-            return res.status(401).send({ error: 'Invalid username or password.' });
-        }
-
-        req.session.user_id = user.user_id;
-        req.session.username = username;
-
-        return res.status(200).send({
-            message: 'Login successful.',
-            username: user.username,
-            first_name: user.first_name,
-            last_name: user.last_name,
-        });
+      // Fetch the user record by username
+      const user_rows = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`);
+      if (user_rows.length === 0) {
+        return res.status(401).send({ error: 'Invalid username or password.' });
+      }
+  
+      const user = user_rows[0];
+      // Compare the password with the hashed password
+      const isPasswordCorrect = await bcrypt.compare(password, user.hashed_password);
+  
+      if (!isPasswordCorrect) {
+        return res.status(401).send({ error: 'Invalid username or password.' });
+      }
+  
+      // Set session data
+      req.session.user_id = user.user_id;
+      req.session.username = username;
+  
+      return res.status(200).send({
+        message: 'Login successful.',
+        username: user.username,
+        first_name: user.first_name,
+        last_name: user.last_name,
+      });
     } catch (err) {
-        console.error('Database error:', err);
-        return res.status(500).send({ error: 'Error logging in.' });
+      console.error('Database error:', err);
+      return res.status(500).send({ error: 'Error logging in.' });
     }
-};
+  };  
 
 // GET /logout
 export const postLogout = function (req, res) {

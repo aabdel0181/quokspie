@@ -10,7 +10,7 @@ import Predictions from "./scenes/predictions";
 import Login from "./scenes/login/Login";
 import Signup from "./scenes/Signup/Signup";
 
-// Simulated authentication check (REPLACE)
+// Authentication check
 const isAuthenticated = () => Boolean(localStorage.getItem("authToken")); 
 
 // Component to protect routes
@@ -46,44 +46,13 @@ function App() {
           <Box width="100%" height="100%" padding="1rem 2rem 4rem 2rem">
             <Routes>
               {/* Public Routes */}
-              <Route
-                path="/login"
-                element={
-                  isAuthenticated() ? (
-                    <Navigate to="/" replace />
-                  ) : (
-                    <Login />
-                  )
-                }
-              />
-              <Route
-                path="/signup"
-                element={
-                  isAuthenticated() ? (
-                    <Navigate to="/" replace />
-                  ) : (
-                    <Signup />
-                  )
-                }
-              />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
 
               {/* Protected Routes */}
-              <Route
-                path="/"
-                element={
-                  <RequireAuth>
-                    <Dashboard />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/predictions"
-                element={
-                  <RequireAuth>
-                    <Predictions />
-                  </RequireAuth>
-                }
-              />
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/predictions" element={<Predictions />} />
+              <Route path="/logout" element={<Logout />} />
             </Routes>
           </Box>
         </Layout>
