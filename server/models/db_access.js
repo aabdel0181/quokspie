@@ -1,113 +1,69 @@
-const mysql = require('mysql');
-const config = require('../config.json'); // load configuration
-const process = require('process');
-require('dotenv').config()
+import mysql from 'mysql';
+import config from '../config.json' assert { type: 'json' };
+import dotenv from 'dotenv';
 
-/**
- * Implementation of a singleton pattern for database connections
- */
+dotenv.config(); // Load environment variables
 
-var the_db = null;
+let the_db = null;
 
-module.exports = {
-    get_db_connection,
-    set_db_connection,
-    create_tables,
-    insert_items,
-    send_sql,
-    close_db
+// Export functions as named exports
+export async function get_db_connection() {
+    if (the_db) {
+        return Promise.resolve(the_db);
+    }
+
+    const dbconfig = { ...config.database };
+    dbconfig.user = config.database.user;
+    dbconfig.password = config.database.password;
+
+    the_db = mysql.createConnection(dbconfig);
+
+    console.log(dbconfig, dbconfig.user, dbconfig.password);
+
+    // Connect to MySQL
+    return new Promise((resolve, reject) => {
+        the_db.connect(err => {
+            if (err) {
+                console.error('Failed to connect to MySQL:', err);
+                reject(err);
+            } else {
+                console.log('Connected to MySQL server.');
+                resolve(the_db);
+            }
+        });
+    });
 }
 
-/**
- * For mocking
- * 
- * @param {*} db 
- */
-function set_db_connection(db) {
-    the_db = db;
-}
-
-function close_db() {
+export function close_db() {
     if (the_db) {
         the_db.end();
         the_db = null;
     }
 }
 
-/**
- * Get a connection to the MySQL database
- * 
- * @returns An SQL connection object or mock object
- */
-async function get_db_connection() {
-    if (the_db) {
-        return new Promise(function (resolve, reject) {
-            return resolve(the_db);
-        });
-    }
-
-    dbconfig = config.database;
-    dbconfig.user = process.env.RDS_USER;
-    dbconfig.password = process.env.RDS_PWD;
-    the_db = mysql.createConnection(dbconfig);
-
-    console.log(dbconfig, dbconfig.user, dbconfig.password);
-
-    // Connect to MySQL
-    return new Promise(function (resolve, reject) {
-        the_db.connect(err => {
-            console.log("Didn't connect");
-            if (err)
-                return reject(err);
-            else {
-                console.log('Connected to the MySQL server.');
-                return resolve(the_db);
-            }
-        });
-    });
-}
-
-/**
- * Sends an SQL query to the database
- * 
- * @param {*} query 
- * @param {*} params 
- * @returns promise
- */
-async function send_sql(sql, params = []) {
+export async function send_sql(sql, params = []) {
     const dbo = await get_db_connection();
     return new Promise((resolve, reject) => {
-        dbo.query(sql, (error, results) => {
+        dbo.query(sql, params, (error, results) => {
             if (error) {
                 return reject(error);
             }
-            return resolve(results);
+            resolve(results);
         });
     });
 }
 
-
-/**
-* Sends an SQL CREATE TABLES to the database
-* 
-* @param {*} query 
-* @param {*} params 
-* @returns promise
-*/
-async function create_tables(query, params = []) {
+export async function create_tables(query, params = []) {
     return send_sql(query, params);
 }
 
-
-/**
- * Executes an SQL INSERT request
- * 
- * @param {*} query 
- * @param {*} params 
- * @returns The number of rows inserted
- */
-async function insert_items(query, params = []) {
-    result = await send_sql(query, params);
-
+export async function insert_items(query, params = []) {
+    const result = await send_sql(query, params);
     return result.affectedRows;
 }
+
+export function set_db_connection(db) {
+    the_db = db;
+}
+
+

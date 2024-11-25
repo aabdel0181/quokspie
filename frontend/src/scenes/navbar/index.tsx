@@ -53,26 +53,14 @@ const Navbar = () => {
             </Box>
             <Box sx={{ "&:hover": { color: palette.primary[100] } }}>
                 <Link
-                    to="/signup"
-                    onClick={() => setSelected("signup")}
+                    to="/logout"
+                    onClick={() => setSelected("logout")}
                     style={{
                         color: selected === "predictions" ? "inherit" : palette.grey[700],
                         textDecoration: "inherit"
                     }}
                 >
-                    Sign Up
-                </Link>
-            </Box>
-            <Box sx={{ "&:hover": { color: palette.primary[100] } }}>
-                <Link
-                    to="/login"
-                    onClick={() => setSelected("login")}
-                    style={{
-                        color: selected === "predictions" ? "inherit" : palette.grey[700],
-                        textDecoration: "inherit"
-                    }}
-                >
-                    Login
+                    Logout
                 </Link>
             </Box>
         </FlexBetween>
