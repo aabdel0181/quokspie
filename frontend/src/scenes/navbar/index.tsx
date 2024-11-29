@@ -8,7 +8,7 @@ const Navbar = () => {
     const { palette } = useTheme();
     const [selected, setSelected] = useState("dashboard");
     return (
-    <FlexBetween mb="0.25rem" p="0.5rem 0rem" color={palette.grey[300]}>
+    <FlexBetween mb="0.25rem" p="0.5rem 2rem" color={palette.grey[300]}>
         {/* LEFT SIDE */}
         <FlexBetween gap="0.75rem">
             <Box
@@ -61,6 +61,18 @@ const Navbar = () => {
                     }}
                 >
                     Logout
+                </Link>
+            </Box>
+            <Box sx={{ "&:hover": { color: palette.primary[100] } }}>
+                <Link
+                    to="/cluster"
+                    onClick={() => setSelected("cluster")}
+                    style={{
+                        color: selected === "predictions" ? "inherit" : palette.grey[700],
+                        textDecoration: "inherit"
+                    }}
+                >
+                    Cluster
                 </Link>
             </Box>
         </FlexBetween>
