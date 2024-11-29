@@ -13,8 +13,8 @@ enclave {
         //initialize NVML & grab all device handles to store in TEE
         void getDeviceHandles(
             [in] unsigned int tk,                     // Input: tempkey for hmac
-            [out, size=*handle_count] uintptr_t *handles, // Output: Array of GPU handles
-            [out] size_t *handle_count                // Output: Number of retrieved handles
+            [out, size=*numHandles] uintptr_t *handles, // Output: Array of GPU handles
+            [out] size_t *numHandles                // Output: Number of retrieved handles
         );
         //ocall to grab gpu data + hmac it
         void pollGPU(
