@@ -10,6 +10,7 @@ import Predictions from "./scenes/predictions";
 import Login from "./scenes/login/Login";
 import Signup from "./scenes/Signup/Signup";
 import Logout from "./scenes/logout/Logout";
+import Cluster from "./scenes/Cluster"
 
 // Function to check session validity
 const checkSession = async () => {
@@ -104,6 +105,14 @@ function App() {
                 element={
                   <RequireAuth>
                     <Logout />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/cluster"
+                element={
+                  <RequireAuth>
+                    <Cluster />
                   </RequireAuth>
                 }
               />
