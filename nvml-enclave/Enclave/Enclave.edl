@@ -1,0 +1,54 @@
+enclave {
+    
+    trusted {
+        /* define ECALLs here. */
+        //tell the tee to initialize
+        void ecallInit();
+        //tell the TEE it's time to grab data
+        void ecallGetData();
+    };
+
+    untrusted {
+        /* define OCALLs here. */
+        //initialize NVML & grab all device handles to store in TEE
+        void getDeviceHandles(
+            [in] unsigned int tk,                     // Input: tempkey for hmac
+            [out, size=*handle_count] uintptr_t *handles, // Output: Array of GPU handles
+            [out] size_t *handle_count                // Output: Number of retrieved handles
+        );
+        //ocall to grab gpu data + hmac it
+        void pollGPU(
+            [in] unsigned int tk,
+            [in] uintptr_t handle,
+            [out] unsigned int *temperature,
+            [out] unsigned int *clock_speed,
+            [out] unsigned int *memory_used,
+            [out] unsigned int *power,
+            [out, size=32] unsigned char *hmac
+        );
+
+        // DEBUG function for printing from enclave
+        void enclavePrint([in, string] const char *str);
+
+        /* GRANULAR! Can implement later, but higher overhead
+        
+        // securely get temperature signed with tk
+        void getTemp([in] unsigned int tk, 
+            [in] uintptr_t handle, 
+            [out] unsigned int *temperature);
+        // securely get clock speed signed with tk
+        void getQuokk([in] unsigned int tk, 
+            [in] uintptr_t handle, 
+            [out] unsigned int *quokk);
+        // securely get memory usage signed with tk
+        void getMem([in] unsigned int tk, 
+            [in] uintptr_t handle, 
+            [out] unsigned int *memory);
+        // securely get power usage signed with tk
+        void getPow([in] unsigned int tk, 
+            [in] uintptr_t handle, 
+            [out] unsigned int *power);
+
+        */
+    };
+};
