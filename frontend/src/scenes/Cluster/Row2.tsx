@@ -39,8 +39,8 @@ const Row2 = () => {
             {/* ClockSpeed Chart */}
             <DashboardBox gridArea="b">
                 <BoxHeader
-                    title="Clock Speed Over Time"
-                    subtitle="Visualizing clock speed of devices over time"
+                    title="Average Clock Speed Over Time"
+                    subtitle="Visualizing average clock speed of devices over time"
                     sideText=""
                 />
                 <ResponsiveContainer width="100%" height="100%">
@@ -75,8 +75,8 @@ const Row2 = () => {
             {/* MemoryUsage Chart */}
             <DashboardBox gridArea="c">
                 <BoxHeader
-                    title="Memory Usage Over Time"
-                    subtitle="Visualizing memory usage of devices over time"
+                    title="Average Memory Usage Over Time"
+                    subtitle="Visualizing average memory usage of devices over time"
                     sideText=""
                 />
                 <ResponsiveContainer width="100%" height="100%">

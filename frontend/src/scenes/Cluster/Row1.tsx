@@ -1,15 +1,14 @@
 import DashboardBox from '../../components/DashboardBox';
-import { Box, Select, MenuItem, SelectChangeEvent, useTheme } from '@mui/material';
+import { Box, Select, MenuItem, SelectChangeEvent } from '@mui/material';
 import BoxHeader from '../../components/BoxHeader';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 
 
 const Row1 = () => {
-    const { palette } = useTheme();
-
+    const [selected, setSelected] = useState("dashboard");
     const [selectedOption, setSelectedOption] = useState('');
-
     const handleChange = (event: SelectChangeEvent<string>) => {
         setSelectedOption(event.target.value);
     };
@@ -26,20 +25,48 @@ const Row1 = () => {
                     variant="outlined"
                     sx={{
                         color: 'white',
-                        '& .MuiSelect-icon': { color: 'white'}, 
-                        marginBottom: '-1rem' 
+                        '& .MuiSelect-icon': { color: 'white' },
+                        '& .MuiSelect-select': { fontSize: '0.7rem' },
+                        marginBottom: '-1rem'
                     }}
                 >
-                    <MenuItem value="" disabled sx={{ color: 'black' }}>Select Individual GPU</MenuItem>
-                    <MenuItem value="option1" sx={{ color: 'black' }}>Option 1</MenuItem>
-                    <MenuItem value="option2" sx={{ color: 'black' }}>Option 2</MenuItem>
-                    <MenuItem value="option3" sx={{ color: 'black' }}>Option 3</MenuItem>
+                    <MenuItem value="" disabled sx={{ color: 'white' }}>
+                        Select Individual GPU
+                    </MenuItem>
+                    <MenuItem value="option1" sx={{ color: 'black' }}>
+                        <Link
+                            to="/"
+                            onClick={() => setSelected("dashboard")}
+                            style={{
+                                color: "black",
+                                textDecoration: "inherit",
+                                width: '100%',
+                                display: 'block'
+                            }}
+                        >
+                            Ahmed's GPU
+                        </Link>
+                    </MenuItem>
+                    <MenuItem value="option2" sx={{ color: 'black' }}>
+                        <Link
+                            to="/TaruGPU"
+                            onClick={() => setSelected("predictions")}
+                            style={{
+                                color: "black",
+                                textDecoration: "inherit",
+                                width: '100%',
+                                display: 'block'
+                            }}
+                        >
+                            Taru's GPU
+                        </Link>
+                    </MenuItem>
                 </Select>
                 <BoxHeader
                     title="Health Score"
-                    subtitle="Relative GPU Cluster Health"
+                    subtitle="Relative GPU cluster health"
                     sideText="+35%"
-                    fontSize="1rem"
+                    fontSize="1.25rem"
                 />
             {/* Health score chart */}
                 <Box 

@@ -6,7 +6,7 @@ import { Box, CssBaseline } from "@mui/material";
 import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./scenes/navbar";
 import Dashboard from "./scenes/dashboard";
-import Predictions from "./scenes/predictions";
+import Predictions from "./scenes/Taru GPU";
 import Login from "./scenes/login/Login";
 import Signup from "./scenes/Signup/Signup";
 import Logout from "./scenes/logout/Logout";
@@ -93,7 +93,7 @@ function App() {
                 }
               />
               <Route
-                path="/predictions"
+                path="/TaruGPU"
                 element={
                   <RequireAuth>
                     <Predictions />
