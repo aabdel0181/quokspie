@@ -19,12 +19,14 @@ const BoxHeader = ({ icon, title, subtitle, sideText }: Props) => {
           <Typography variant="h4" mb="-0.1rem">
             {title}
           </Typography>
-          <Typography variant="h6">{subtitle}</Typography>
+          <Typography variant="h6">
+            {subtitle}
+          </Typography>
         </Box>
       </FlexBetween>
-      <Typography variant="h5" fontWeight="700" color={palette.secondary[500]}>
-        {sideText}
-      </Typography>
+        <Typography variant="h5" fontWeight="700" color={palette.secondary[500]}>
+          {sideText}
+        </Typography>
     </FlexBetween>
   );
 };

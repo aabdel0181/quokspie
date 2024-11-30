@@ -1,15 +1,20 @@
 import { Box, useMediaQuery } from '@mui/material';
 import Row1 from './Row1';
 import Row2 from './Row2';
+import Row3 from './Row3';
+
 
 
 const gridTemplateLargeScreens = `
-    "a b"
-    "a b"
-    "a b"
-    "c d"
-    "c d"
-    "c d"
+    "a a"
+    "a a"
+    "a a"
+    "b c"
+    "b c"
+    "b c"
+    "d e"
+    "d e"
+    "d e"
 `;
 
 const gridTemplateSmallScreens = `
@@ -25,7 +30,13 @@ const gridTemplateSmallScreens = `
     "d"
     "d"
     "d"
-`
+    "e"
+    "e"
+    "e"
+    "f"
+    "f"
+    "f"
+`;
 
 
 const Dashboard = () => {
@@ -49,8 +60,9 @@ const Dashboard = () => {
                 })
             }}
         >
-            <Row1 />
-            <Row2 />
+            <Row1/>
+            <Row2/>
+            <Row3/>
         </Box>
     );
 };

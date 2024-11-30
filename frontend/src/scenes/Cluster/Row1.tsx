@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import DashboardBox from '../../components/DashboardBox';
 import { useGetDeviceDataQuery } from '../../state/api';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
+import { Box} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import BoxHeader from '../../components/BoxHeader';
 
@@ -36,76 +36,16 @@ const Row1 = () => {
 
     return (
         <>
-            {/* ClockSpeed Chart */}
+            {/* Health score chart */}
             <DashboardBox gridArea="a">
                 <BoxHeader
-                    title="Clock Speed Over Time"
-                    subtitle="Visualizing clock speed of devices over time"
-                    sideText=""
+                    title="Health Score"
+                    subtitle="Relative GPU Cluster Health"
+                    sideText="+35%"
                 />
-                <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                        data={clockSpeedData}
-                        margin={{
-                            top: 20,
-                            right: 30,
-                            left: -15,
-                            bottom: 60,
-                        }}
-                    >
-                        <defs>
-                            <linearGradient id="colorClockSpeed" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor={palette.primary.main} stopOpacity={0.8}/>
-                                <stop offset="95%" stopColor={palette.primary.main} stopOpacity={0}/>
-                            </linearGradient>
-                        </defs>
-                        <XAxis 
-                          dataKey="name" 
-                          tickLine={false} 
-                          style={{ fontSize: "10px" }} />
-                        <YAxis 
-                          tickLine={false} 
-                          style={{ fontSize: "10px" }} />
-                        <Tooltip />
-                        <Area type="monotone" dataKey="value" stroke={palette.primary.main} fill="url(#colorClockSpeed)" />
-                    </AreaChart>
-                </ResponsiveContainer>
-            </DashboardBox>
-
-            {/* MemoryUsage Chart */}
-            <DashboardBox gridArea="b">
-                <BoxHeader
-                    title="Memory Usage Over Time"
-                    subtitle="Visualizing memory usage of devices over time"
-                    sideText=""
-                />
-                <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                        data={memoryUsageData}
-                        margin={{
-                          top: 20,
-                          right: 30,
-                          left: -15,
-                          bottom: 60,
-                        }}
-                    >
-                        <defs>
-                            <linearGradient id="colorMemoryUsage" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor={palette.secondary.main} stopOpacity={0.8}/>
-                                <stop offset="95%" stopColor={palette.secondary.main} stopOpacity={0}/>
-                            </linearGradient>
-                        </defs>
-                        <XAxis 
-                          dataKey="name" 
-                          tickLine={false} 
-                          style={{ fontSize: "10px" }} />
-                        <YAxis 
-                        tickLine={false} 
-                        style={{ fontSize: "10px" }} />
-                        <Tooltip />
-                        <Area type="monotone" dataKey="value" stroke={palette.secondary.main} fill="url(#colorMemoryUsage)" />
-                    </AreaChart>
-                </ResponsiveContainer>
+                <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+                    <h1 style={{ fontSize: "7rem", color: "white" }}>123</h1>
+                </Box>
             </DashboardBox>
         </>
     );
