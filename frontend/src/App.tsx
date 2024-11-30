@@ -10,7 +10,7 @@ import Predictions from "./scenes/Taru GPU";
 import Login from "./scenes/login/Login";
 import Signup from "./scenes/Signup/Signup";
 import Logout from "./scenes/logout/Logout";
-import Cluster from "./scenes/Cluster"
+import Cluster from "./scenes/cluster"
 
 // Function to check session validity
 const checkSession = async () => {
