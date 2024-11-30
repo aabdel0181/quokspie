@@ -87,7 +87,7 @@ void getDeviceHandles(unsigned int tk, uintptr_t *handles, size_t *handleCount) 
 }
 
 //perform polling... Should bandwidth allow, run each check individually
-void pollGPU(unsigned int tk, uintptr_t handle, unsigned int *temperature,
+void pollGPU(char *tk, uintptr_t handle, unsigned int *temperature,
              unsigned int *clock_speed, unsigned int *memory_used,
              unsigned int *power, unsigned char *hmac) {
     //cast pointer back to handle            
@@ -137,5 +137,5 @@ void pollGPU(unsigned int tk, uintptr_t handle, unsigned int *temperature,
     offset += sizeof(*power);
 
     // Compute HMAC
-    HMAC(EVP_sha256(), &tk, sizeof(tk), data, offset, hmac, NULL);
+    HMAC(EVP_sha256(), tk, 32, data, offset, hmac, NULL);
 }

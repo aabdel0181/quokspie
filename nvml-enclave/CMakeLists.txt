@@ -5,8 +5,12 @@ project(GPUOdometer LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Paths
+set(APP_DIR "${CMAKE_SOURCE_DIR}/App")
+set(ENCLAVE_DIR "${CMAKE_SOURCE_DIR}/Enclave")
+
 # Add the main executable
-add_executable(gpu_odometer main.cpp)
+add_executable(gpu_odometer ${APP_DIR}/main.cpp ${APP_DIR}/ocalls.cpp)
 
 # Platform-specific NVML setup
 if(WIN32)
@@ -44,6 +48,44 @@ else()
         message(FATAL_ERROR "NVML library not found on Linux. Ensure NVML is installed or adjust the path.")
     endif()
 endif()
+
+#include sgx
+
+# SGX paths
+set(SGX_SDK "/opt/intel/sgxsdk")
+set(SGX_LIB "${SGX_SDK}/lib64")
+set(SGX_INCLUDE "${SGX_SDK}/include")
+
+# Enclave settings
+set(ENCLAVE_NAME "Enclave")
+set(ENCLAVE_EDL "${ENCLAVE_DIR}/Enclave.edl")
+
+# Generate the SGX edger8r files
+add_custom_command(
+    OUTPUT ${ENCLAVE_DIR}/Enclave_t.c ${ENCLAVE_DIR}/Enclave_t.h
+    COMMAND ${SGX_SDK}/bin/x64/sgx_edger8r --trusted ${ENCLAVE_EDL} --search-path ${SGX_INCLUDE}
+    COMMAND ${SGX_SDK}/bin/x64/sgx_edger8r --untrusted ${ENCLAVE_EDL} --search-path ${SGX_INCLUDE}
+    DEPENDS ${ENCLAVE_EDL}
+)
+
+# Enclave library
+add_library(${ENCLAVE_NAME}_lib STATIC ${ENCLAVE_DIR}/Enclave_t.c ${ENCLAVE_DIR}/Enclave.cpp)
+target_include_directories(${ENCLAVE_NAME}_lib PRIVATE ${SGX_INCLUDE} ${ENCLAVE_DIR})
+
+# Build the enclave shared object
+add_library(${ENCLAVE_NAME}_so SHARED ${ENCLAVE_DIR}/Enclave.cpp)
+target_include_directories(${ENCLAVE_NAME}_so PRIVATE ${SGX_INCLUDE} ${ENCLAVE_DIR})
+
+# Sign the enclave
+add_custom_command(
+    OUTPUT ${ENCLAVE_DIR}/${ENCLAVE_NAME}.signed.so
+    COMMAND ${SGX_SDK}/bin/x64/sgx_sign sign -key ${ENCLAVE_DIR}/Enclave_private.pem -enclave ${ENCLAVE_DIR}/${ENCLAVE_NAME}.so -out ${ENCLAVE_DIR}/${ENCLAVE_NAME}.signed.so
+    DEPENDS ${ENCLAVE_DIR}/${ENCLAVE_NAME}.so
+)
+
+# Link the main executable with SGX untrusted library and NVML
+target_link_libraries(gpu_odometer PRIVATE ${SGX_LIB}/libsgx_urts.so ${ENCLAVE_NAME}_lib)
+target_include_directories(gpu_odometer PRIVATE ${SGX_INCLUDE} ${APP_DIR})
 
 # Include other directories like Stopwatch.h
 target_include_directories(gpu_odometer PRIVATE ${CMAKE_SOURCE_DIR})
