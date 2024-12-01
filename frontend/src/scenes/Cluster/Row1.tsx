@@ -92,7 +92,7 @@ const Row1 = () => {
                     height="100%"
                     style={{ marginTop: '-60px' }}
                 >
-                    <h1 style={{ fontSize: "7rem", color: "white" }}>123</h1>
+                    <h1 style={{ fontSize: "7rem", color: "white" }}>746</h1>
                 </Box>
             </DashboardBox>
         </>

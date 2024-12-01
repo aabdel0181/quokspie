@@ -1,40 +1,68 @@
 import DashboardBox from '../../components/DashboardBox';
-import { Box, Select, MenuItem, SelectChangeEvent } from '@mui/material';
+import { Box } from '@mui/material';
 import BoxHeader from '../../components/BoxHeader';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+
 
 
 
 const Row1 = () => {
-    const [selected, setSelected] = useState("dashboard");   
 
     return (
         <>
             {/* Dropdown menu */}
-            <DashboardBox gridArea="a">
-                <Box 
-                    display="flex" 
-                    justifyContent="flex-end"
-                >
-
-                </Box>
+            <DashboardBox gridArea="a" sx={{ boxShadow: 'none' }}>
                 <BoxHeader
-                    title="Health Score"
-                    subtitle="Relative GPU cluster health"
-                    sideText="+35%"
-                    fontSize="1.25rem"
                 />
-            {/* Health score chart */}
                 <Box 
                     display="flex" 
+                    flexDirection="column"
                     justifyContent="center" 
                     alignItems="center" 
                     fontSize="1rem"
                     height="100%"
-                    style={{ marginTop: '-60px' }}
+                    style={{ marginTop: '-60px', position: 'relative', zIndex: 1 }}
                 >
-                    <h1 style={{ fontSize: "7rem", color: "white" }}>123</h1>
+                    <h1 style={{ 
+                        fontSize: "2rem", 
+                        color: "white", 
+                        marginTop: "4rem",
+                        textAlign: "center" }}
+                        >
+                            Manage, Resell, and Optimize your GPUs
+                    </h1>
+                    <h2 style={{ 
+                        fontSize: "7rem", 
+                        color: "white", 
+                        marginTop: "-2rem",
+                        textAlign: "center" }}
+                        >
+                            The First GPU Odometer
+                    </h2>
+                </Box>
+                <Box 
+                    display="flex" 
+                    flexDirection="column"
+                    justifyContent="center" 
+                    alignItems="center" 
+                    height="100%"
+                    style={{ marginTop: '20px', position: 'relative', zIndex: 1 }}
+                >
+                    <div style={{ 
+                        fontSize: "1.5rem", 
+                        color: "white", 
+                        marginTop: "-47rem",
+                        textAlign: "center" }}
+                        >
+                            Number of Users
+                    </div>
+                    <h2 style={{ 
+                        fontSize: "4rem", 
+                        color: "white", 
+                        marginTop: "-1rem",
+                        textAlign: "center" }}
+                        >
+                            1,000,000
+                    </h2>
                 </Box>
             </DashboardBox>
         </>
