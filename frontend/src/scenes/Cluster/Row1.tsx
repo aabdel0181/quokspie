@@ -49,7 +49,7 @@ const Row1 = () => {
                         </MenuItem>
                         <MenuItem value="option1">
                             <Link
-                                to="/"
+                                to="/AhmedGPU"
                                 onClick={() => setSelected("dashboard")}
                                 style={{
                                     color: "white",

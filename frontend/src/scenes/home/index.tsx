@@ -1,37 +1,68 @@
-import React from 'react';
-import { Box, Typography, Button } from '@mui/material';
-import Navbar from './navbar'; // Adjust the import path as necessary
-import Footer from './Footer'; // Create a Footer component if you don't have one
+import { Box, useMediaQuery } from '@mui/material';
+import Row1 from './Row1';
+import Row2 from './Row2';
+import Row3 from './Row3';
 
-const Home: React.FC = () => {
-  return (
-    <Box>
-      <Navbar />
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '80vh',
-          textAlign: 'center',
-          backgroundColor: '#f5f5f5',
-          padding: '2rem',
-        }}
-      >
-        <Typography variant="h2" gutterBottom>
-          Welcome to Our Platform
-        </Typography>
-        <Typography variant="h5" gutterBottom>
-          Discover the power of our tools and services.
-        </Typography>
-        <Button variant="contained" color="primary" href="/signup">
-          Get Started
-        </Button>
-      </Box>
-      <Footer />
-    </Box>
-  );
+const gridTemplateLargeScreens = `
+    "a a a"
+    "a a a"
+    "a a a"
+    "a a a"
+    "a a a"
+    "a a a"
+    "b b b"
+    "b b b"
+    "b b b"
+    "c d e"
+    "c d e"
+    "c d e"
+`;
+
+const gridTemplateSmallScreens = `
+    "a"
+    "a"
+    "a"
+    "b"
+    "b"
+    "b"
+    "c"
+    "c"
+    "c"
+    "d"
+    "d"
+    "d"
+    "e"
+    "e"
+    "e"
+`;
+
+const Dashboard = () => {
+    const isAboveMediumScreens = useMediaQuery("(min-width: 1200px)");
+
+    return (
+        <Box 
+            width="100%" 
+            height="100%" 
+            display="grid" 
+            gap="1.5rem"
+            sx={{
+                marginTop: '-1.5rem',
+                ...(isAboveMediumScreens ? {
+                    gridTemplateColumns: "repeat(3, minmax(370px, 1fr))",
+                    gridTemplateRows: "repeat(12, minmax(80px, 1fr))",
+                    gridTemplateAreas: gridTemplateLargeScreens,
+                } : {
+                    gridAutoColumns: "1fr",
+                    gridAutoRows: "80px",
+                    gridTemplateAreas: gridTemplateSmallScreens,
+                })
+            }}
+        >
+            <Row1 />
+            <Row2 />
+            <Row3 />
+        </Box>
+    );
 };
 
-export default Home; 
+export default Dashboard;

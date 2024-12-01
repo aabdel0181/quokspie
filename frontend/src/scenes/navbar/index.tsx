@@ -27,12 +27,24 @@ const Navbar = () => {
         </FlexBetween>
         {/* RIGHT SIDE */}
         <FlexBetween gap="2rem">
+        <Box sx={{ "&:hover": { color: palette.primary[100] } }}>
+                <Link
+                    to="/"
+                    onClick={() => setSelected("home")}
+                    style={{
+                        color: selected === "home" ? "inherit" : palette.grey[700],
+                        textDecoration: "inherit"
+                    }}
+                >
+                    Home
+                </Link>
+            </Box>
             <Box sx={{ "&:hover": { color: palette.primary[100] } }}>
                 <Link
                     to="/cluster"
                     onClick={() => setSelected("cluster")}
                     style={{
-                        color: selected === "predictions" ? "inherit" : palette.grey[700],
+                        color: selected === "cluster" ? "inherit" : palette.grey[700],
                         textDecoration: "inherit"
                     }}
                 >
@@ -44,14 +56,13 @@ const Navbar = () => {
                     to="/logout"
                     onClick={() => setSelected("logout")}
                     style={{
-                        color: selected === "predictions" ? "inherit" : palette.grey[700],
+                        color: selected === "logout" ? "inherit" : palette.grey[700],
                         textDecoration: "inherit"
                     }}
                 >
                     Logout
                 </Link>
             </Box>
-
         </FlexBetween>
     </FlexBetween>
     );

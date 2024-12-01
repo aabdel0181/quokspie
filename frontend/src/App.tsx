@@ -5,12 +5,13 @@ import { useMemo, useState, useEffect } from "react";
 import { Box, CssBaseline } from "@mui/material";
 import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./scenes/navbar";
-import Dashboard from "./scenes/dashboard";
+import Dashboard from "./scenes/Ahmed GPU";
 import Predictions from "./scenes/Taru GPU";
 import Login from "./scenes/login/Login";
 import Signup from "./scenes/Signup/Signup";
 import Logout from "./scenes/logout/Logout";
 import Cluster from "./scenes/cluster"
+import Home from "./scenes/home"
 
 // Function to check session validity
 const checkSession = async () => {
@@ -82,10 +83,11 @@ function App() {
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/" element={<Home />} />
 
               {/* Protected Routes */}
               <Route
-                path="/"
+                path="/AhmedGPU"
                 element={
                   <RequireAuth>
                     <Dashboard />
