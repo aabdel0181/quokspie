@@ -267,6 +267,26 @@ export const postRampResults = async function (req, res) {
     }
 };
 
+// GET /latest-mttf
+export const getLatestMttf = async (req, res) => {
+    try {
+        const result = await db.send_sql(
+            `SELECT mttf_overall, timestamp FROM ramp_model_results ORDER BY timestamp DESC LIMIT 1`
+        );
+
+        if (result.length === 0) {
+            return res.status(404).send({ error: "No data found." });
+        }
+
+        return res.status(200).send({
+            mttf_overall: result[0].mttf_overall,
+            timestamp: result[0].timestamp,
+        });
+    } catch (err) {
+        console.error("Database error:", err);
+        return res.status(500).send({ error: "Error fetching latest MTTF." });
+    }
+};
 
 // Export all routes as a single object
 const routes = {
@@ -279,6 +299,7 @@ const routes = {
     check_username: checkUsername,
     check_session: checkSession,
     post_ramp_results: postRampResults,
+    get_latest_mttf: getLatestMttf,
 };
 
 export default routes;

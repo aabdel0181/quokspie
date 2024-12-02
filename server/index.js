@@ -51,6 +51,7 @@ app.post("/login", routes.post_login);
 app.post("/logout", routes.post_logout);
 app.get("/session-check", routes.check_session);
 app.post("/ramp-results", routes.post_ramp_results);
+app.get("/latest-mttf", routes.get_latest_mttf);
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 9000;
