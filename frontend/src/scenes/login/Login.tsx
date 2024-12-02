@@ -51,7 +51,7 @@ const Login: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         console.log("Login successful:", data);
-        navigate('/'); // Redirect to the root route
+        navigate('/cluster'); // Redirect to the root route
       } else {
         const error = await response.json();
         console.error("Login failed:", error);
