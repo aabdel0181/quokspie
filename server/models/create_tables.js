@@ -34,7 +34,24 @@ async function create_tables(db) {
         );'
     );
 
-    return await Promise.all([q1, q2]);
+    // RAMP results table
+    var q3 = db.create_tables('CREATE TABLE IF NOT EXISTS ramp_model_results ( \
+        id int PRIMARY KEY AUTO_INCREMENT, \
+        gpu_id VARCHAR(255), \
+        timestamp DATETIME NOT NULL, \
+        temperature FLOAT NOT NULL, \
+        voltage FLOAT NOT NULL, \
+        power_usage FLOAT NOT NULL, \
+        delta_t FLOAT NOT NULL, \
+        mttf_em FLOAT NOT NULL, \
+        mttf_sm FLOAT NOT NULL, \
+        mttf_tddb FLOAT NOT NULL, \
+        mttf_tc FLOAT NOT NULL, \
+        mttf_overall FLOAT NOT NULL, \
+        FOREIGN KEY (gpu_id) REFERENCES gpus(gpu_id) \
+    );');
+
+    return await Promise.all([q1, q2, q3]);
 }
 
 // Database connection setup
