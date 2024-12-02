@@ -142,9 +142,9 @@ def mttf_calculations(metrics):
     return MTTF_EM, MTTF_SM, MTTF_TDDB, MTTF_TC, MTTF_overall
 
 def main():
-    device_id = "GPU-dummy-1234" # TESTING
+    device_id = "GPU-bbc80d76-6599-a3e1-0cb6-db0b4fb59df6"  # Taru's device ID
     while True:
-        metrics = get_dummy_metrics(device_id)
+        metrics = get_latest_metrics(device_id)
         # if metrics:
         #     MTTF_EM, MTTF_SM, MTTF_TDDB, MTTF_TC, MTTF_overall = mttf_calculations(metrics)
         #     print(f"Latest Metrics for Device {device_id}:")
