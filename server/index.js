@@ -25,7 +25,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(
     cors({
-      origin: 'http://localhost:1337', // Replace with your frontend's URL
+      origin: 'http://localhost:1337', // Frontend's URL
       methods: ['GET', 'POST', 'OPTIONS'], // Allow these HTTP methods
       credentials: true, // Allow cookies and credentials
     })
@@ -50,6 +50,7 @@ app.post("/register", routes.post_register); // Register route
 app.post("/login", routes.post_login);
 app.post("/logout", routes.post_logout);
 app.get("/session-check", routes.check_session);
+app.post("/ramp-results", routes.post_ramp_results);
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 9000;

@@ -205,6 +205,69 @@ export const checkSession = (req, res) => {
     res.status(401).send({ authenticated: false });
 };
 
+// POST /ramp-results
+export const postRampResults = async function (req, res) {
+    const {
+        gpu_id,
+        timestamp,
+        temperature,
+        voltage,
+        power_usage,
+        delta_t,
+        mttf_em,
+        mttf_sm,
+        mttf_tddb,
+        mttf_tc,
+        mttf_overall,
+    } = req.body;
+
+    if (
+        !gpu_id ||
+        !timestamp ||
+        temperature === undefined ||
+        voltage === undefined ||
+        power_usage === undefined ||
+        delta_t === undefined ||
+        mttf_em === undefined ||
+        mttf_sm === undefined ||
+        mttf_tddb === undefined ||
+        mttf_tc === undefined ||
+        mttf_overall === undefined
+    ) {
+        return res.status(400).send({ error: "Missing required fields." });
+    }
+
+    try {
+        console.log("Inserting into ramp_model_results table with data:", req.body);
+
+        await db.insert_items(
+            `INSERT INTO ramp_model_results (
+                gpu_id, timestamp, temperature, voltage, power_usage, delta_t,
+                mttf_em, mttf_sm, mttf_tddb, mttf_tc, mttf_overall
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                gpu_id,
+                timestamp,
+                temperature,
+                voltage,
+                power_usage,
+                delta_t,
+                mttf_em,
+                mttf_sm,
+                mttf_tddb,
+                mttf_tc,
+                mttf_overall,
+            ]
+        );
+
+        return res.status(200).send({ message: "RAMP model results inserted successfully." });
+    } catch (err) {
+        console.error("Database error during insertion:", err); // Log the actual error
+        return res.status(500).send({ error: "Error inserting RAMP model results." });
+    }
+};
+
+
 // Export all routes as a single object
 const routes = {
     post_login: postLogin,
@@ -215,6 +278,7 @@ const routes = {
     get_user_info: getUserInfo,
     check_username: checkUsername,
     check_session: checkSession,
+    post_ramp_results: postRampResults,
 };
 
 export default routes;
