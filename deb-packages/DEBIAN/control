@@ -1,0 +1,10 @@
+Package: quakspie
+Version: 0.1
+Section: custom
+Priority: optional
+Architecture: all
+Essential: no
+Installed-Size: 1024
+Maintainer: Quaka Waka Flame 
+Description: Quakspie GPU Monitor Daemon
+ A daemon that monitors GPU metrics and runs in the background.
