@@ -1,313 +1,305 @@
-const { S3Client, PutObjectCommand, GetObjectCommand, CopyObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+import * as dbsingleton from '../models/db_access.js';
+import bcrypt from 'bcrypt';
+import { encryptPassword, isOK, isLoggedIn } from '../routes/route_helper.js';
 
-const dbsingleton = require('../models/db_access.js');
-const config = require('../config.json'); // Load configuration
-const bcrypt = require('bcrypt');
-const helper = require('../routes/route_helper.js');
 const db = dbsingleton;
-const s3 = new S3Client({ region: config.awsRegion });
 
 // GET /getUserInfo
-var getUserInfo = async function (req, res) {
-    // Check if user is logged in
+export const getUserInfo = async function (req, res) {
     const username = req.params.username;
-    if (!helper.isLoggedIn(req, username)) {
+
+    if (!isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
-    const params = {
-        Bucket: config.photoBucket,
-        Key: username,
-    };
-    const command = new GetObjectCommand(params);
-    const url = await getSignedUrl(s3, command, { expiresIn: 7200 });
-    // console.log(url);
-
     try {
-        username_rows = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`);
-        console.log(username_rows);
-
-        const data = JSON.parse(JSON.stringify(username_rows));
-
-        console.log(data[0].hashed_password);
-
-        return res.status(200).send({ username: data[0].username, linked_nconst: data[0].linked_nconst, link: url });
-
-    } catch {
-        return res.status(500).send({ error: 'Error querying database.' });
-    }
-}
-
-var postNewUsername = async function (req, res) {
-    const old_username = req.params.username;
-    console.log(old_username);
-    if (!helper.isLoggedIn(req, old_username)) {
-        return res.status(403).send({ error: 'Not logged in.' });
-    }
-
-    const { username } = req.body;
-    if (!username || !helper.isOK(username)) {
-        return res.status(400).send({ error: 'One or more of the fields you entered was empty, please try again.' });
-    }
-
-    // Check if account already exist
-    try {
-        username_rows = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`);
-        console.log(username_rows);
-        if (username_rows.length > 0) {
-            return res.status(409).send({ error: 'An account with this username already exists, please try again.' });
+        const username_rows = await db.send_sql(`SELECT username, first_name, last_name FROM users WHERE username = '${username}'`);
+        if (username_rows.length === 0) {
+            return res.status(404).send({ error: 'User not found.' });
         }
-    } catch {
-        return res.status(500).send({ error: 'Error querying database.' });
-    }
 
-    try {
-        const num_rows = await db.insert_items(`UPDATE users SET username = '${username}' WHERE user_id = '${req.session.user_id}';`)
-    } catch {
-        return res.status(500).send({ error: 'Error querying database.' });
-    }
+        const userData = username_rows[0];
 
-    const copyParams = {
-        Bucket: config.photoBucket,
-        CopySource: `${config.photoBucket}/${old_username}`,
-        Key: username
-    };
+        const gpu_rows = await db.send_sql(
+            `SELECT model, gpu_id FROM gpus WHERE user_id = (SELECT user_id FROM users WHERE username = '${username}')`
+        );
 
-    try {
-        const copyCommand = new CopyObjectCommand(copyParams);
-        s3.send(copyCommand);
-
-        const deleteParams = {
-            Bucket: config.photoBucket,
-            Key: old_username
-        };
-        const deleteCommand = new DeleteObjectCommand(deleteParams);
-
-        s3.send(deleteCommand);
-    } catch (err) {
-        console.log(err);
-        return res.status(500).send({ error: 'Error updating photo.' });
-    }
-
-
-    try {
-        const result = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`)
-        req.session.user_id = result[0].user_id;
-        req.session.username = username;
-
-        return res.status(200).send({ username: username });
-    } catch {
-        return res.status(500).send({ error: 'Error querying database.' });
-    }
-}
-
-var postNewPw = async function (req, res) {
-    const username = req.params.username;
-    if (!helper.isLoggedIn(req, username)) {
-        return res.status(403).send({ error: 'Not logged in.' });
-    }
-
-    const { password } = req.body;
-    if (!password || !helper.isOK(password)) {
-        return res.status(400).send({ error: 'One or more of the fields you entered was empty, please try again.' });
-    }
-
-    store = async function (err, hash) {
-        // Store in db
-        if (err) {
-            return res.status(500).send({ error: 'Error querying database.' });
-        }
-        try {
-            const num_rows = await db.insert_items(`UPDATE users SET hashed_password = '${hash}' WHERE username = '${username}';`)
-            return res.status(200).send({ username: username });
-        } catch {
-            return res.status(500).send({ error: 'Error querying database.' });
-        }
-    }
-
-    helper.encryptPassword(password, store);
-}
-
-var postNewPhoto = async function (req, res) {
-    const username = req.params.username;
-    if (!helper.isLoggedIn(req, username)) {
-        return res.status(403).send({ error: 'Not logged in.' });
-    }
-
-    const photo = req.file;
-    if (!photo) {
-        return res.status(400).send({ error: 'One or more of the fields you entered was empty, please try again.' });
-    }
-
-    const params = {
-        Bucket: config.photoBucket,
-        Key: `${username}`,
-        Body: photo.buffer,
-        ContentType: photo.mimetype
-    };
-
-    const command = new PutObjectCommand(params);
-
-    try {
-        // Upload the file to S3
-        const data = await s3.send(command);
-    } catch (err) {
-        console.error("Error uploading to S3", err);
-        res.status(500).send("Error registering user");
-    }
-
-}
-
-// POST /register 
-var postRegister = async function (req, res) {
-    const { username, password, gpuModel, gpuSerial } = req.body;
-    const photo = req.file;
-
-    // Ensure all required fields are provided
-    if (!username || !password || !gpuModel || !gpuSerial || !photo) {
-        return res.status(400).send({ error: 'One or more fields are missing.' });
-    }
-
-    // Check if the username already exists in the database
-    try {
-        const username_rows = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`);
-        if (username_rows.length > 0) {
-            return res.status(409).send({ error: 'An account with this username already exists, please try again.' });
-        }
-    } catch {
-        return res.status(500).send({ error: 'Error querying database.' });
-    }
-
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Upload photo to S3
-    const params = {
-        Bucket: config.photoBucket,
-        Key: `${username}`,
-        Body: photo.buffer,
-        ContentType: photo.mimetype
-    };
-    const command = new PutObjectCommand(params);
-    try {
-        await s3.send(command);
-    } catch (err) {
-        console.error("Error uploading to S3", err);
-        return res.status(500).send("Error registering user");
-    }
-
-    // Insert user into the users table
-    try {
-        const insertUserQuery = `INSERT INTO users (username, hashed_password) VALUES ('${username}', '${hashedPassword}')`;
-        await db.send_sql(insertUserQuery);
-    } catch {
-        return res.status(500).send({ error: 'Error inserting user into the database.' });
-    }
-
-    // Insert GPU information into the gpus table
-    try {
-        const insertGpuQuery = `INSERT INTO gpus (model, gpu_id, user_id) VALUES ('${gpuModel}', '${gpuSerial}', (SELECT user_id FROM users WHERE username = '${username}'))`;
-        await db.send_sql(insertGpuQuery);
-    } catch {
-        return res.status(500).send({ error: 'Error inserting GPU data into the database.' });
-    }
-
-    // Set session variables for the user
-    try {
-        const result = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`);
-        req.session.user_id = result[0].user_id;
-        req.session.username = username;
-        return res.status(200).send({ username: username });
-    } catch {
-        return res.status(500).send({ error: 'Error setting session.' });
-    }
-};
-
-
-
-// POST /login
-var postLogin = async function (req, res) {
-    // Check username and password and login
-    const username = req.body.username;
-    const password = req.body.password;
-
-    console.log("Reached login");
-
-    // Error checking
-    if (!username || !password || !helper.isOK(username) || !helper.isOK(password)) {
-        return res.status(400).send({ error: 'One or more of the fields you entered was empty, please try again.' });
-    }
-
-    db.send_sql(`SELECT * FROM users WHERE username = '${username}'`)
-        .then(result => {
-            hashed_password = result[0].hashed_password;
-            user_id = result[0].user_id;
-            console.log("Trying to login");
-            bcrypt.compare(password, hashed_password, function (err, result) {
-                if (err) {
-                    return res.status(500).send({ error: 'Error querying database.' });
-                }
-                if (result) {
-                    // Correct username and pw, set session
-                    req.session.user_id = user_id;
-                    req.session.username = username;
-                    return res.status(200).send({ username: username });
-                } else {
-                    // Wrong username and pw
-                    return res.status(401).send({ error: 'Username and/or password are invalid.' });
-                }
-            });
-        })
-        .catch(err => {
-            console.log(err);
-
-            return res.status(500).send({ error: 'Error querying database.' });
-        })
-};
-
-
-// GET /logout
-var postLogout = function (req, res) {
-    // Log out logic to disable session info
-    req.session.user_id = null;
-    req.session.username = null;
-    return res.status(200).send({ message: "You were successfully logged out." });
-};
-
-// GET /check-username
-var checkUsername = async function (req, res) {
-    const username = req.query.username;
-
-    if (!username) {
-        return res.status(400).send({ error: 'Username parameter is missing.' });
-    }
-
-    try {
-        const result = await db.send_sql(`SELECT username FROM users WHERE username = '${username}'`);
-        if (result.length > 0) {
-            return res.status(200).send({ exists: true });
-        } else {
-            return res.status(200).send({ exists: false });
-        }
+        return res.status(200).send({
+            user: userData,
+            gpus: gpu_rows,
+        });
     } catch (err) {
         console.error('Database error:', err);
         return res.status(500).send({ error: 'Error querying database.' });
     }
 };
 
-/* se construct an object that contains a field for each route
-   we've defined, so we can call the routes from app.js. */
-var routes = {
+// POST /update-username
+export const postNewUsername = async function (req, res) {
+    const old_username = req.params.username;
+
+    if (!isLoggedIn(req, old_username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
+    }
+
+    const { username } = req.body;
+    if (!username || !isOK(username)) {
+        return res.status(400).send({ error: 'Invalid username.' });
+    }
+
+    try {
+        const username_rows = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`);
+        if (username_rows.length > 0) {
+            return res.status(409).send({ error: 'Username already exists.' });
+        }
+
+        await db.insert_items(`UPDATE users SET username = '${username}' WHERE user_id = '${req.session.user_id}'`);
+
+        req.session.username = username;
+
+        return res.status(200).send({ message: 'Username updated successfully.', username });
+    } catch (err) {
+        console.error('Database error:', err);
+        return res.status(500).send({ error: 'Error updating username.' });
+    }
+};
+
+// POST /update-password
+export const postNewPw = async function (req, res) {
+    const username = req.params.username;
+
+    if (!isLoggedIn(req, username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
+    }
+
+    const { password } = req.body;
+    if (!password || !isOK(password)) {
+        return res.status(400).send({ error: 'Invalid password.' });
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await db.insert_items(`UPDATE users SET hashed_password = '${hashedPassword}' WHERE username = '${username}'`);
+
+        return res.status(200).send({ message: 'Password updated successfully.' });
+    } catch (err) {
+        console.error('Database error:', err);
+        return res.status(500).send({ error: 'Error updating password.' });
+    }
+};
+
+// POST /register
+export const postRegister = async function (req, res) {
+    const { username, password, firstName, lastName, gpuModel, gpuSerial } = req.body;
+
+    if (!username || !password || !firstName || !lastName || !gpuModel || !gpuSerial) {
+        return res.status(400).send({ error: 'Missing required fields.' });
+    }
+
+    try {
+        const username_rows = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`);
+        if (username_rows.length > 0) {
+            return res.status(409).send({ error: 'Username already exists.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await db.send_sql(
+            `INSERT INTO users (username, hashed_password, first_name, last_name) VALUES ('${username}', '${hashedPassword}', '${firstName}', '${lastName}')`
+        );
+
+        // await db.send_sql(
+        //     `INSERT INTO gpus (model, gpu_id, user_id) VALUES ('${gpuModel}', '${gpuSerial}', (SELECT user_id FROM users WHERE username = '${username}'))`
+        // );
+
+        const user_id = (
+            await db.send_sql(`SELECT user_id FROM users WHERE username = '${username}'`)
+        )[0].user_id;
+
+        // Set session variables
+        req.session.user_id = user_id;
+        req.session.username = username;
+
+        return res.status(200).send({ message: 'User registered successfully.', username });
+    } catch (err) {
+        console.error('Database error:', err);
+        return res.status(500).send({ error: 'Error registering user.' });
+    }
+};
+
+// POST /login
+export const postLogin = async function (req, res) {
+    console.log("in postLogin");
+
+    const { username, password } = req.body;
+  
+    if (!username || !password || !isOK(username) || !isOK(password)) {
+      return res.status(400).send({ error: 'Invalid credentials.' });
+    }
+  
+    try {
+      // Fetch the user record by username
+      const user_rows = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`);
+      if (user_rows.length === 0) {
+        return res.status(401).send({ error: 'Invalid username or password.' });
+      }
+  
+      const user = user_rows[0];
+      // Compare the password with the hashed password
+      const isPasswordCorrect = await bcrypt.compare(password, user.hashed_password);
+  
+      if (!isPasswordCorrect) {
+        return res.status(401).send({ error: 'Invalid username or password.' });
+      }
+  
+      // Set session data
+      req.session.user_id = user.user_id;
+      req.session.username = username;
+  
+      return res.status(200).send({
+        message: 'Login successful.',
+        username: user.username,
+        first_name: user.first_name,
+        last_name: user.last_name,
+      });
+    } catch (err) {
+      console.error('Database error:', err);
+      return res.status(500).send({ error: 'Error logging in.' });
+    }
+  };  
+
+// GET /logout
+export const postLogout = (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Error destroying session:', err);
+        return res.status(500).send({ message: 'Logout failed' });
+      }
+      res.status(200).send({ message: 'Logged out successfully' });
+    });
+  };
+
+// GET /check-username
+export const checkUsername = async function (req, res) {
+    const { username } = req.query;
+
+    if (!username) {
+        return res.status(400).send({ error: 'Username is required.' });
+    }
+
+    try {
+        const result = await db.send_sql(`SELECT username FROM users WHERE username = '${username}'`);
+        return res.status(200).send({ exists: result.length > 0 });
+    } catch (err) {
+        console.error('Database error:', err);
+        return res.status(500).send({ error: 'Error querying database.' });
+    }
+};
+
+// GET /session-check
+export const checkSession = (req, res) => {
+    if (req.session && req.session.user_id) {
+        return res.status(200).send({ authenticated: true, username: req.session.username });
+    }
+    res.status(401).send({ authenticated: false });
+};
+
+// POST /ramp-results
+export const postRampResults = async function (req, res) {
+    const {
+        gpu_id,
+        timestamp,
+        temperature,
+        voltage,
+        power_usage,
+        delta_t,
+        mttf_em,
+        mttf_sm,
+        mttf_tddb,
+        mttf_tc,
+        mttf_overall,
+    } = req.body;
+
+    if (
+        !gpu_id ||
+        !timestamp ||
+        temperature === undefined ||
+        voltage === undefined ||
+        power_usage === undefined ||
+        delta_t === undefined ||
+        mttf_em === undefined ||
+        mttf_sm === undefined ||
+        mttf_tddb === undefined ||
+        mttf_tc === undefined ||
+        mttf_overall === undefined
+    ) {
+        return res.status(400).send({ error: "Missing required fields." });
+    }
+
+    try {
+        console.log("Inserting into ramp_model_results table with data:", req.body);
+
+        await db.insert_items(
+            `INSERT INTO ramp_model_results (
+                gpu_id, timestamp, temperature, voltage, power_usage, delta_t,
+                mttf_em, mttf_sm, mttf_tddb, mttf_tc, mttf_overall
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                gpu_id,
+                timestamp,
+                temperature,
+                voltage,
+                power_usage,
+                delta_t,
+                mttf_em,
+                mttf_sm,
+                mttf_tddb,
+                mttf_tc,
+                mttf_overall,
+            ]
+        );
+
+        return res.status(200).send({ message: "RAMP model results inserted successfully." });
+    } catch (err) {
+        console.error("Database error during insertion:", err); // Log the actual error
+        return res.status(500).send({ error: "Error inserting RAMP model results." });
+    }
+};
+
+// GET /latest-mttf
+export const getLatestMttf = async (req, res) => {
+    try {
+        const result = await db.send_sql(
+            `SELECT mttf_overall, timestamp FROM ramp_model_results ORDER BY timestamp DESC LIMIT 1`
+        );
+
+        if (result.length === 0) {
+            return res.status(404).send({ error: "No data found." });
+        }
+
+        return res.status(200).send({
+            mttf_overall: result[0].mttf_overall,
+            timestamp: result[0].timestamp,
+        });
+    } catch (err) {
+        console.error("Database error:", err);
+        return res.status(500).send({ error: "Error fetching latest MTTF." });
+    }
+};
+
+// Export all routes as a single object
+const routes = {
     post_login: postLogin,
     post_register: postRegister,
     post_logout: postLogout,
     post_new_username: postNewUsername,
     post_new_pw: postNewPw,
-    post_new_photo: postNewPhoto,
-    post_new_nconst: postNewNconst,
     get_user_info: getUserInfo,
     check_username: checkUsername,
+    check_session: checkSession,
+    post_ramp_results: postRampResults,
+    get_latest_mttf: getLatestMttf,
 };
 
-module.exports = routes;
+export default routes;

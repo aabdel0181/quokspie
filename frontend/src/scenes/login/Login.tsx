@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -13,34 +12,54 @@ import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { indigo } from '@mui/material/colors';
 
-axios.defaults.withCredentials = true;
-
 const defaultTheme = createTheme();
 
 const Login: React.FC = () => {
+  const [formData, setFormData] = useState({
+    username: '', // Username field
+    password: '', // Password field
+  });
+  const [error, setError] = useState<string | null>(null); // Error state
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value, // Dynamically update username or password
+    });
+  };
 
-  useEffect(() => {
-    const logout = async () => {
-      try {
-        await axios.get('/api/logout');
-      } catch (err) {
-        console.error('Error logging out', err);
-      }
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const payload = {
+      username: formData.username,
+      password: formData.password,
     };
-    logout();
-  }, []);
 
-  const handleLogin = async () => {
     try {
-      await axios.post('/api/login', { username, password });
-      navigate(`/${username}/home`);
+      const response = await fetch('http://localhost:9000/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies for session
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Login successful:", data);
+        navigate('/cluster'); // Redirect to the root route
+      } else {
+        const error = await response.json();
+        console.error("Login failed:", error);
+        setError(error.error || "Login failed. Please try again.");
+      }
     } catch (err) {
-      setError('Invalid username or password.');
+      console.error("Network error:", err);
+      setError("Network error. Please try again later.");
     }
   };
 
@@ -66,7 +85,7 @@ const Login: React.FC = () => {
           <Typography component="h1" variant="h5" sx={{ mt: 2 }}>
             Sign In
           </Typography>
-          <Box sx={{ mt: 1 }}>
+          <Box component="form" onSubmit={handleLogin} sx={{ mt: 1 }}>
             <TextField
               margin="normal"
               required
@@ -74,9 +93,8 @@ const Login: React.FC = () => {
               id="username"
               label="Username"
               name="username"
-              autoFocus
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={formData.username} // Use formData.username
+              onChange={handleChange}
             />
             <TextField
               margin="normal"
@@ -86,8 +104,8 @@ const Login: React.FC = () => {
               label="Password"
               type="password"
               id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={formData.password} // Use formData.password
+              onChange={handleChange}
             />
             {error && (
               <Typography color="error" sx={{ mt: 2 }}>
@@ -95,11 +113,10 @@ const Login: React.FC = () => {
               </Typography>
             )}
             <Button
-              type="button"
+              type="submit"
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2, bgcolor: indigo[900] }}
-              onClick={handleLogin}
             >
               Login
             </Button>

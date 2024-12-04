@@ -1,6 +1,7 @@
 import AWS from "aws-sdk";
 import deviceRoutes from "./routes/deviceRoutes.js"; // Updated route import
 import express from "express";
+import session from "express-session"; // Import session
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -9,9 +10,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import kpiRoutes from "./routes/kpi.js";
 import productRoutes from "./routes/product.js";
-import KPI from "./models/KPI.js";
-import Product from "./models/Product.js";
-import { kpis, products } from "./data/data.js";
+import routes from "./routes/routes.js"; // Import your routes
 
 // Load environment variables
 dotenv.config();
@@ -24,13 +23,35 @@ app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(morgan("common"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cors());
+app.use(
+    cors({
+      origin: 'http://localhost:1337', // Frontend's URL
+      methods: ['GET', 'POST', 'OPTIONS'], // Allow these HTTP methods
+      credentials: true, // Allow cookies and credentials
+    })
+  );
+
+// Configure session middleware
+app.use(
+    session({
+        secret: "quokspie", 
+        resave: false,
+        saveUninitialized: true,
+        cookie: { secure: false }, // Set secure: true in production with HTTPS
+    })
+);
 
 console.log("hello");
 
 /* ROUTES */
 app.use("/kpi", kpiRoutes);
 app.use("/product", productRoutes);
+app.post("/register", routes.post_register); // Register route
+app.post("/login", routes.post_login);
+app.post("/logout", routes.post_logout);
+app.get("/session-check", routes.check_session);
+app.post("/ramp-results", routes.post_ramp_results);
+app.get("/latest-mttf", routes.get_latest_mttf);
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 9000;
@@ -41,7 +62,7 @@ mongoose
     })
     .then(async () => {
         app.listen(PORT, () => console.log(`Server Port: ${PORT}`));
-        
+
         //* ADD DATA ONE TIME ONLY OR AS NEEDED
         //await mongoose.connection.db.dropDatabase();
         //KPI.insertMany(kpis);
