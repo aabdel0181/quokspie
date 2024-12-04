@@ -16,6 +16,6 @@ else
 fi
 
 # Build the package
-dpkg-deb --build . ../quakspie.deb
-
+# dpkg-deb --build . ../quakspie.deb
+dpkg-deb --root-owner-group --build quakspie_d
 echo "Debian package created: ./quakspie.deb"
