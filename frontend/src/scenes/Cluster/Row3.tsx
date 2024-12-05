@@ -1,56 +1,40 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import DashboardBox from '../../components/DashboardBox';
 import { useGetDeviceDataQuery } from '../../state/api';
 import BoxHeader from '../../components/BoxHeader';
 import { AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useTheme } from '@mui/material';
 
+interface DeviceData {
+    Timestamp: string; // or Date if it's a Date object
+    Temperature: number; // Adjust types as necessary
+    PowerUsage: number; // Adjust types as necessary
+}
+
 const Row3 = () => {
     const { palette } = useTheme();
     const { data } = useGetDeviceDataQuery();
 
-    const deviceIdsToFilter = [
-        "GPU-eeeb2355-a08f-ee62-eead-751f2c632aba",
-        "GPU-bbc80d76-6599-a3e1-0cb6-db0b4fb59df6"
-    ];
-
-    // Filter and process data for Temperature chart
-    const temperatureData = useMemo(() => {
-        const filteredData = data?.filter(({ DeviceId }) => deviceIdsToFilter.includes(DeviceId)); // Filter by DeviceId
-        const groupedData = filteredData?.reduce((acc, { Timestamp, Temperature }) => {
+    // Function to calculate average data
+    const calculateAverageData = useCallback((data: DeviceData[], key: keyof DeviceData) => {
+        const groupedData = data?.reduce((acc: { [key: string]: { total: number; count: number } }, { Timestamp, [key]: value }) => {
             const time = new Date(Timestamp).toLocaleString();
             if (!acc[time]) {
-                acc[time] = { totalTemperature: 0, count: 0 };
+                acc[time] = { total: 0, count: 0 };
             }
-            acc[time].totalTemperature += Temperature;
+            acc[time].total += Number(value);
             acc[time].count += 1;
             return acc;
-        }, {});
+        }, {} as { [key: string]: { total: number; count: number } });
 
-        return Object.entries(groupedData || {}).map(([name, { totalTemperature, count }]) => ({
+        return Object.entries(groupedData || {}).map(([name, { total, count }]) => ({
             name,
-            value: totalTemperature / count, // Calculate average
+            value: total / count, // Calculate average
         }));
-    }, [data]);
+    }, []);
 
-    // Filter and process data for PowerUsage chart
-    const powerUsageData = useMemo(() => {
-        const filteredData = data?.filter(({ DeviceId }) => deviceIdsToFilter.includes(DeviceId)); // Filter by DeviceId
-        const groupedData = filteredData?.reduce((acc, { Timestamp, PowerUsage }) => {
-            const time = new Date(Timestamp).toLocaleString();
-            if (!acc[time]) {
-                acc[time] = { totalPowerUsage: 0, count: 0 };
-            }
-            acc[time].totalPowerUsage += PowerUsage;
-            acc[time].count += 1;
-            return acc;
-        }, {});
-
-        return Object.entries(groupedData || {}).map(([name, { totalPowerUsage, count }]) => ({
-            name,
-            value: totalPowerUsage / count, // Calculate average
-        }));
-    }, [data]);
+    const temperatureData = useMemo(() => calculateAverageData(data || [], 'Temperature'), [data, calculateAverageData]);
+    const powerUsageData = useMemo(() => calculateAverageData(data || [], 'PowerUsage'), [data, calculateAverageData]);
 
     return (
         <>

@@ -1,35 +1,43 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import DashboardBox from '../../components/DashboardBox';
 import { useGetDeviceDataQuery } from '../../state/api';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import { useTheme } from '@mui/material/styles';
 import BoxHeader from '../../components/BoxHeader';
 
+interface DeviceData {
+    Timestamp: string; // or Date if it's a Date object
+    ClockSpeed: number; // Adjust types as necessary
+    MemoryUsed: number; // Adjust types as necessary
+}
+
 const Row2 = () => {
     const { palette } = useTheme();
     const { data, isLoading, error } = useGetDeviceDataQuery();
 
-    const deviceIdToFilter = "GPU-eeeb2355-a08f-ee62-eead-751f2c632aba";
+    // Function to calculate average data
+    const calculateAverageData = useCallback((data: DeviceData[], key: keyof DeviceData) => {
+        const groupedData = data?.reduce((acc: { [key: string]: { total: number; count: number } }, { Timestamp, [key]: value }) => {
+            const time = new Date(Timestamp).toLocaleString();
+            if (!acc[time]) {
+                acc[time] = { total: 0, count: 0 };
+            }
+            acc[time].total += Number(value);
+            acc[time].count += 1;
+            return acc;
+        }, {} as { [key: string]: { total: number; count: number } });
+
+        return Object.entries(groupedData || {}).map(([name, { total, count }]) => ({
+            name,
+            value: total / count, // Calculate average
+        }));
+    }, []);
 
     // Filter and process data for ClockSpeed chart
-    const clockSpeedData = useMemo(() => {
-        return data
-            ?.filter(({ DeviceId }) => DeviceId === deviceIdToFilter) // Filter by DeviceId
-            .map(({ Timestamp, ClockSpeed }) => ({
-                name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
-                value: ClockSpeed,
-            }));
-    }, [data]);
+    const clockSpeedData = useMemo(() => calculateAverageData(data || [], 'ClockSpeed'), [data, calculateAverageData]);
 
     // Filter and process data for MemoryUsage chart
-    const memoryUsageData = useMemo(() => {
-      return data
-          ?.filter(({ DeviceId }) => DeviceId === deviceIdToFilter) // Filter by DeviceId
-          .map(({ Timestamp, MemoryUsed }) => ({
-              name: new Date(Timestamp).toLocaleString(), // Format timestamp to full date and time for the x-axis
-              value: parseFloat(MemoryUsed.toFixed(3)), // Limit to 3 decimal places
-          }));
-  }, [data]);
+    const memoryUsageData = useMemo(() => calculateAverageData(data || [], 'MemoryUsed'), [data, calculateAverageData]);
 
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div>Error loading data.</div>;

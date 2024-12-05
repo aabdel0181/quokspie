@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import DashboardBox from "../../components/DashboardBox";
 import { Box, Select, MenuItem, SelectChangeEvent } from "@mui/material";
 import BoxHeader from "../../components/BoxHeader";
 import { Link } from "react-router-dom";
 
 const Row1 = () => {
-    const [selected, setSelected] = useState("dashboard");
     const [selectedOption, setSelectedOption] = useState("");
-    const [latestMttf, setLatestMttf] = useState<number | null>(null);
     const [mttfHistory, setMttfHistory] = useState<number[]>([]);
     const [timestamp, setTimestamp] = useState<string | null>(null);
 
@@ -22,8 +20,6 @@ const Row1 = () => {
                 if (response.ok) {
                     const data = await response.json();
                     const newMttf = data.mttf_overall;
-
-                    setLatestMttf(newMttf);
 
                     // Update MTTF history (keep only the last 5 entries)
                     setMttfHistory((prevHistory) => {
@@ -83,7 +79,7 @@ const Row1 = () => {
                         <MenuItem value="option1">
                             <Link
                                 to="/AhmedGPU"
-                                onClick={() => setSelected("dashboard")}
+                                onClick={() => setSelectedOption("dashboard")}
                                 style={{
                                     color: "white",
                                     textDecoration: "inherit",
@@ -97,7 +93,7 @@ const Row1 = () => {
                         <MenuItem value="option2">
                             <Link
                                 to="/TaruGPU"
-                                onClick={() => setSelected("predictions")}
+                                onClick={() => setSelectedOption("predictions")}
                                 style={{
                                     color: "white",
                                     textDecoration: "inherit",

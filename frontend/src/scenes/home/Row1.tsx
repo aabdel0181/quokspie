@@ -9,9 +9,8 @@ const Row1 = () => {
     return (
         <>
             <DashboardBox gridArea="a" sx={{ boxShadow: 'none' }}>
-                <BoxHeader
-                />
-                 <Box 
+                <BoxHeader title="" sideText="" />
+                <Box 
                     display="flex" 
                     flexDirection="column"
                     justifyContent="center" 

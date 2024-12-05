@@ -10,8 +10,7 @@ const Row2 = () => {
         <>
             {/* Dropdown menu */}
             <DashboardBox gridArea="b" sx={{ backgroundColor: 'transparent', boxShadow: 'none' }}>
-                <BoxHeader
-                    />
+                <BoxHeader title="" sideText=""/>
                 <Box 
                     display="flex" 
                     flexDirection="column"
