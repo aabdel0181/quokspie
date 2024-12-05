@@ -37,7 +37,7 @@ j_worst = 10**11       # Worst-case current density (A/m^2)
 A_TDDB = MTTF_target_hours / ((V_worst**b) * (T_worst**X) * \
                   (10**(Y / T_worst)) * (10**(Z * V_worst / T_worst)))
 A_TC = MTTF_target_hours * (delta_T_worst**q)
-A_EM = MTTF_target_hours / ((j_worst**(-1*n_em)) * math.exp(e_aem/(k*T_worst)))
+#A_EM = MTTF_target_hours / ((j_worst**(-1*n_em)) * math.exp(e_aem/(k*T_worst)))
 A_SM = MTTF_target_hours / ((delta_T_worst**(-1*n_sm)) * 
                             math.exp(e_aem/(k*T_worst)))
 
@@ -50,21 +50,33 @@ dynamodb = boto3.resource(
 )
 table = dynamodb.Table('senior_design_dummy')
 
-def get_latest_metrics(device_id):
+def get_latest_metrics(device_id, params=1):
     """
-    Retrieve the latest metrics for a given device ID from the DynamoDB table.
+    Retrieve the latest x metrics for a given device ID from the DynamoDB table.
+    Consolidates multiple metrics into a single dictionary if x > 1.
     """
     response = table.query(
         KeyConditionExpression="DeviceId = :device_id",
         ExpressionAttributeValues={":device_id": device_id},
-        ScanIndexForward=False,  # Get the latest items
-        Limit=1  # Limit to the latest record
+        ScanIndexForward=False,  # Get the latest items first
+        Limit=params  # Limit to x records
     )
     items = response.get('Items', [])
-    if items:
-        return items[0]  # Return the latest item
-    else:
-        return None
+
+    if not items:
+        return None  # No data found
+
+    if params == 1:
+        return items[0]  # Return the latest item as a dictionary
+
+    # Consolidate metrics into a single dictionary
+    consolidated = {}
+    for item in items:
+        for key, value in item.items():
+            # Combine metrics with a list for multiple records
+            consolidated.setdefault(key, []).append(value)
+
+    return consolidated  # Return a dictionary with lists for multiple records
 
 def safe_exp(exponent, max_exponent=700):
     """
@@ -119,10 +131,37 @@ def mttf_calculations(metrics):
     
     return MTTF_EM, MTTF_SM, MTTF_TDDB, MTTF_TC, MTTF_overall
 
+def thermal_cycling(device_id):
+    """
+    Check if a thermal cycle occurred based on temperature data.
+    """
+    temp_metrics = get_latest_metrics(device_id, 120)  # Retrieve 120 records
+    if not temp_metrics or 'Temperature' not in temp_metrics:
+        print("No temperature data found.")
+        return False
+
+    try:
+        # Access the list of temperature values, convert to Kelvin
+        temperatures = [float(temp) + 273.15 for temp in temp_metrics['Temperature']]
+        min_temp = min(temperatures)
+        max_temp = max(temperatures)
+
+        # Check if the temperature difference exceeds the threshold
+        return (max_temp - min_temp) > 10
+    except (TypeError, ValueError) as e:
+        print(f"Error processing temperature data: {e}")
+        return False
+
+
 def main():
     device_id = "GPU-bbc80d76-6599-a3e1-0cb6-db0b4fb59df6"  # Taru's device ID
+    thermal_cycles = 0
+
+    last_thermal_check = time.time()
+
     while True:
-        metrics = get_latest_metrics(device_id)
+        # MTTF calculations (every 5 seconds)
+        metrics = get_latest_metrics(device_id, 1)
         if metrics:
             MTTF_EM, MTTF_SM, MTTF_TDDB, MTTF_TC, MTTF_overall = mttf_calculations(metrics)
             print(f"Latest Metrics for Device {device_id}:")
@@ -139,7 +178,17 @@ def main():
         else:
             print(f"No metrics found for Device ID: {device_id}")
 
-        time.sleep(5)  # Wait before querying again
+        # Thermal cycling check (every 120 seconds)
+        current_time = time.time()
+        if current_time - last_thermal_check >= 120:
+            if thermal_cycling(device_id):
+                thermal_cycles += 1
+                print(f"Thermal Cycle Detected! Total Cycles: {thermal_cycles}")
+            else:
+                print("No thermal cycle detected in the last 120 seconds.")
+            last_thermal_check = current_time  # Reset the thermal check timer
+
+        time.sleep(5)  # Wait 5 seconds before next MTTF calculation
 
 if __name__ == "__main__":
     main()
