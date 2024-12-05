@@ -223,7 +223,7 @@ bool signUp()
     std::string postFields = "username=" + username + "&password=" + password + "&firstName=" + firstName + "&lastName=" + lastName;
     std::string response;
 
-    curl_easy_setopt(curl, CURLOPT_URL, "http://your-backend-url/post_register");
+    curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:9000/post_register");
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postFields.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
