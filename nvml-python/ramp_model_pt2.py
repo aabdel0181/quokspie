@@ -86,7 +86,7 @@ def mttf_calculations(metrics):
     # INSTANTANEOUS MTTF CALCULATION
     temperature = float(metrics['Temperature']) + 273.15  # Convert to Kelvin
     voltage = float(metrics['Voltage'])
-    power = float(metrics['PowerUsage'])
+    power = float(metrics['PowerUsage']) # Should be 100s of Watts
     delta_T = float(metrics['DeltaT'])
 
     #Electromigration MTTF Calculation
@@ -99,7 +99,7 @@ def mttf_calculations(metrics):
     print("Current density: ", j)
     exponent_em = e_aem / (k * temperature)
     exp_value_em = safe_exp(exponent_em)
-    #A_EM = MTTF_target_hours / ((j**(-1*n_em)) * math.exp(e_aem/(k*T_worst)))
+    A_EM = MTTF_target_hours / ((j**(-1*n_em)) * math.exp(e_aem/(k*T_worst)))
     MTTF_EM = A_EM * j**(-1 * n_em) * exp_value_em
 
     #Stress Migration MTTF Calculation
@@ -131,10 +131,10 @@ def main():
             print(f"  Power Usage: {metrics['PowerUsage']} W")
             print(f"  Delta_T: {metrics['DeltaT']} °C")
             print(f"MTTF Calculations:")
-            print(f"  MTTF_EM: {MTTF_EM:.2f} hours")
-            print(f"  MTTF_SM: {MTTF_SM:.2f} hours")
-            print(f"  MTTF_TDDB: {MTTF_TDDB:.2f} hours")
-            print(f"  MTTF_TC: {MTTF_TC:.2f} hours")
+            print(f"  MTTF_EM: {MTTF_EM / (365 * 24):.2f} hours")
+            print(f"  MTTF_SM: {MTTF_SM / (365 * 24):.2f} hours")
+            print(f"  MTTF_TDDB: {MTTF_TDDB/ (365 * 24):.2f} hours")
+            print(f"  MTTF_TC: {MTTF_TC / (365 * 24):.2f} hours")
             print(f"  Overall MTTF: {MTTF_overall:.2f} hours")
         else:
             print(f"No metrics found for Device ID: {device_id}")
