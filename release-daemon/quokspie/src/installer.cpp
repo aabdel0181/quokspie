@@ -8,6 +8,9 @@
 #include <thread>
 #include <chrono>
 
+#include <curl/curl.h>
+#include <cstring>
+
 // set up logging
 enum class LogLevel
 {
@@ -32,6 +35,15 @@ void clearScreen()
     system("clear");
 #endif
 }
+
+// helper function to handle http requests
+size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* output)
+{
+    size_t totalSize = size * nmemb;
+    output->append((char*)contents, totalSize);
+    return totalSize;
+}
+
 
 // makes a silly progress bar
 void displayProgressBar(int progress)
@@ -149,10 +161,26 @@ std::vector<int> detectAndSelectGPUs()
 // TODO: Make this real XD
 bool signUp()
 {
-    std::string username, password, confirm_password;
+    std::string username, password, confirm_password, firstName, lastName;
 
     while (true)
     {
+        std::cout << "Enter first name: ";
+        std::getline(std::cin, firstName);
+        if (firstName.empty())
+        {
+            std::cout << "First name cannot be empty. Please try again.\n";
+            continue;
+        }
+
+        std::cout << "Enter last name: ";
+        std::getline(std::cin, lastName);
+        if (lastName.empty())
+        {
+            std::cout << "Last name cannot be empty. Please try again.\n";
+            continue;
+        }
+
         std::cout << "Enter new username: ";
         std::getline(std::cin, username);
         if (username.empty())
@@ -183,15 +211,34 @@ bool signUp()
         break;
     }
 
-    // here we would actually create the account
-    std::cout << "Creating account";
-    for (int i = 0; i < 3; i++)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        std::cout << ".";
-        std::cout.flush();
+    CURL* curl;
+    CURLcode res;
+    curl = curl_easy_init();
+
+    if (!curl) {
+        std::cerr << "Failed to initialize curl correctly" << std::endl;
+        return false;
     }
-    std::cout << "\nAccount created successfully!\n";
+
+    std::string postFields = "username=" + username + "&password=" + password + "&firstName=" + firstName + "&lastName=" + lastName;
+    std::string response;
+
+    curl_easy_setopt(curl, CURLOPT_URL, "http://your-backend-url/post_register");
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postFields.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+
+    // here we would actually create the account
+    res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+
+    if (res != CURLE_OK)
+    {
+        std::cerr << "Curl error: " << curl_easy_strerror(res) << "\n";
+        return false;
+    }
+
+    std::cout << "Response from server: " << response << "\n";
     return true;
 }
 
