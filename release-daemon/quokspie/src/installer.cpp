@@ -225,14 +225,14 @@ void runInstallation(const std::vector<int> &selected_gpus)
         displayProgressBar(i);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
-    std::cout << "\nQuakspie installed successfully!\n";
+    std::cout << "\nQuokspie installed successfully!\n";
 }
 
 // prompts the welcome, selects GPUS, and initilaizes sign up / login
 int main()
 {
     clearScreen();
-    std::cout << "Welcome to the Quakspie installer!\n";
+    std::cout << "Welcome to the Quokspie installer!\n";
     std::cout << "==========================================\n\n";
 
     std::vector<int> selected_gpus = detectAndSelectGPUs();

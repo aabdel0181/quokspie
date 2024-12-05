@@ -8,6 +8,7 @@ const Row1 = () => {
     const [selected, setSelected] = useState("dashboard");
     const [selectedOption, setSelectedOption] = useState("");
     const [latestMttf, setLatestMttf] = useState<number | null>(null);
+    const [mttfHistory, setMttfHistory] = useState<number[]>([]);
     const [timestamp, setTimestamp] = useState<string | null>(null);
 
     const handleChange = (event: SelectChangeEvent<string>) => {
@@ -20,7 +21,16 @@ const Row1 = () => {
                 const response = await fetch("http://localhost:9000/latest-mttf");
                 if (response.ok) {
                     const data = await response.json();
-                    setLatestMttf(data.mttf_overall);
+                    const newMttf = data.mttf_overall;
+
+                    setLatestMttf(newMttf);
+
+                    // Update MTTF history (keep only the last 5 entries)
+                    setMttfHistory((prevHistory) => {
+                        const updatedHistory = [...prevHistory, newMttf];
+                        return updatedHistory.slice(-30); // Keep only the last 30 values
+                    });
+
                     setTimestamp(data.timestamp);
                 } else {
                     console.error("Failed to fetch latest MTTF.");
@@ -33,9 +43,15 @@ const Row1 = () => {
         fetchLatestMttf();
     }, []);
 
+    // Calculate the average of the last 5 MTTF values
+    const calculateAverage = () => {
+        if (mttfHistory.length === 0) return null;
+        const sum = mttfHistory.reduce((acc, value) => acc + value, 0);
+        return (sum / mttfHistory.length).toFixed(2); // Rounded to 2 decimal places
+    };
+
     return (
         <>
-            {/* Dropdown menu */}
             <DashboardBox gridArea="a">
                 <Box display="flex" justifyContent="flex-end">
                     <Select
@@ -95,14 +111,13 @@ const Row1 = () => {
                     </Select>
                 </Box>
                 <BoxHeader
-                    title="MTTF Overall"
+                    title="MTTF Overall (Lifetime Left in Hours)"
                     subtitle={`Relative GPU cluster health ${
                         timestamp ? `as of ${new Date(timestamp).toLocaleString()}` : ""
                     }`}
                     sideText="+35%"
                     fontSize="1.25rem"
                 />
-                {/* Health score chart */}
                 <Box
                     display="flex"
                     justifyContent="center"
@@ -113,8 +128,11 @@ const Row1 = () => {
                     style={{ marginTop: "-60px" }}
                 >
                     <h1 style={{ fontSize: "7rem", color: "white" }}>
-                        {latestMttf !== null ? latestMttf : "Loading..."}
+                    {mttfHistory.length > 0 ? calculateAverage() : "Loading..."}
                     </h1>
+                    {/* <h2 style={{ fontSize: "3rem", color: "lightgray" }}>
+                        Avg: {mttfHistory.length > 0 ? calculateAverage() : "N/A"}
+                    </h2> */}
                 </Box>
             </DashboardBox>
         </>
