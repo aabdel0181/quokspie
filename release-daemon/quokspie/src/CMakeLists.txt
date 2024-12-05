@@ -10,7 +10,7 @@ add_executable(installer installer.cpp)
 
 # Platform-specific NVML setup
 if(WIN32)
-    # Windows-specific NVML setup (unchanged from your original file)
+    # Windows-specific NVML setup
     set(NVML_DLL_PATH "C:/Windows/System32/nvml.dll")
     set(NVML_INCLUDE_PATH "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.6/include")
 
@@ -50,3 +50,7 @@ target_include_directories(installer PRIVATE ${CMAKE_SOURCE_DIR})
 
 # Additional libraries (e.g., pthread for multithreading support)
 target_link_libraries(installer PRIVATE pthread)
+
+# Find and link libcurl
+find_package(CURL REQUIRED)
+target_link_libraries(installer PRIVATE CURL::libcurl)

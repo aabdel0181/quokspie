@@ -7,7 +7,6 @@
 #include <iomanip>
 #include <thread>
 #include <chrono>
-
 #include <curl/curl.h>
 #include <cstring>
 
@@ -37,12 +36,13 @@ void clearScreen()
 }
 
 // helper function to handle http requests
-size_t WriteCallback(void *contents, size_t size, size_t nmemb, std::string *output)
+size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* output)
 {
     size_t totalSize = size * nmemb;
-    output->append((char *)contents, totalSize);
+    output->append((char*)contents, totalSize);
     return totalSize;
 }
+
 
 // makes a silly progress bar
 void displayProgressBar(int progress)
@@ -64,16 +64,13 @@ void displayProgressBar(int progress)
 }
 
 // returns: vector of GPU indices
-#include <tuple>
-
-std::vector<std::tuple<int, std::string>> detectAndSelectGPUs()
+std::vector<int> detectAndSelectGPUs()
 {
     nvmlReturn_t result;
     unsigned int device_count;
     char name[NVML_DEVICE_NAME_V2_BUFFER_SIZE];
-    char uuid[NVML_DEVICE_UUID_BUFFER_SIZE];
     nvmlDevice_t handle;
-    std::vector<std::tuple<int, std::string>> selected_devices;
+    std::vector<int> selected_devices;
 
     result = nvmlInit();
     if (result != NVML_SUCCESS)
@@ -109,14 +106,7 @@ std::vector<std::tuple<int, std::string>> detectAndSelectGPUs()
             continue;
         }
 
-        result = nvmlDeviceGetUUID(handle, uuid, NVML_DEVICE_UUID_BUFFER_SIZE);
-        if (result != NVML_SUCCESS)
-        {
-            log_message(LogLevel::WARNING, "Failed to get device UUID for device " + std::to_string(i) + ": " + std::string(nvmlErrorString(result)));
-            continue;
-        }
-
-        std::cout << "[" << i << "] " << name << " (UUID: " << uuid << ")\n";
+        std::cout << "[" << i << "] " << name << "\n";
     }
 
     // prompts the user to select which GPUs they wish to track
@@ -130,15 +120,7 @@ std::vector<std::tuple<int, std::string>> detectAndSelectGPUs()
         {
             for (unsigned int i = 0; i < device_count; i++)
             {
-                result = nvmlDeviceGetHandleByIndex(i, &handle);
-                if (result == NVML_SUCCESS)
-                {
-                    result = nvmlDeviceGetUUID(handle, uuid, NVML_DEVICE_NAME_V2_BUFFER_SIZE);
-                    if (result == NVML_SUCCESS)
-                    {
-                        selected_devices.push_back(std::make_tuple(i, std::string(uuid)));
-                    }
-                }
+                selected_devices.push_back(i);
             }
             break;
         }
@@ -150,15 +132,7 @@ std::vector<std::tuple<int, std::string>> detectAndSelectGPUs()
         {
             if (index >= 0 && index < static_cast<int>(device_count))
             {
-                result = nvmlDeviceGetHandleByIndex(index, &handle);
-                if (result == NVML_SUCCESS)
-                {
-                    result = nvmlDeviceGetUUID(handle, uuid, NVML_DEVICE_NAME_V2_BUFFER_SIZE);
-                    if (result == NVML_SUCCESS)
-                    {
-                        selected_devices.push_back(std::make_tuple(index, std::string(uuid)));
-                    }
-                }
+                selected_devices.push_back(index);
             }
             else
             {
@@ -182,8 +156,9 @@ std::vector<std::tuple<int, std::string>> detectAndSelectGPUs()
     nvmlShutdown();
     return selected_devices;
 }
+
 // TODO: Make this real XD
-bool signUp(std::vector<std::tuple<int, std::string>> selected_gpus)
+bool signUp()
 {
     std::string username, password, confirm_password, firstName, lastName;
 
@@ -235,41 +210,26 @@ bool signUp(std::vector<std::tuple<int, std::string>> selected_gpus)
         break;
     }
 
-    // serialize GPUs to JSON-like format
-    std::string gpuData = "[";
-    for (const auto &gpu : selected_gpus)
-    {
-        gpuData += "{\"gpu_id\":\"" + std::get<1>(gpu) + "\",\"model\":\"Model-" + std::to_string(std::get<0>(gpu)) + "\"},";
-    }
-    if (!selected_gpus.empty())
-    {
-        gpuData.pop_back(); 
-    }
-    gpuData += "]";
-
-    std::cout << gpuData << std::endl;
-
-    CURL *curl;
+    CURL* curl;
     CURLcode res;
     curl = curl_easy_init();
 
-    if (!curl)
-    {
+    if (!curl) {
         std::cerr << "Failed to initialize curl correctly" << std::endl;
         return false;
     }
 
-    std::string postFields = "username=" + username + "&password=" + password +
-                             "&firstName=" + firstName + "&lastName=" + lastName +
-                             "&gpus=" + gpuData;
+    // Prepare the POST fields
+    std::string postFields = "username=" + username + "&password=" + password + "&firstName=" + firstName + "&lastName=" + lastName;
     std::string response;
 
+    // Update the URL to match the correct endpoint for registration
     curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:9000/register");
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postFields.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
-    // here we would actually create the account
+    // Perform the POST request
     res = curl_easy_perform(curl);
     curl_easy_cleanup(curl);
 
@@ -305,7 +265,7 @@ bool login()
 }
 
 // makes it look like stuff is happening (actual install takes 2 seconds LOL)
-void runInstallation(const std::vector<std::tuple<int, std::string>> &selected_gpus)
+void runInstallation(const std::vector<int> &selected_gpus)
 {
     std::cout << "\nSaving Quokkas..\n";
     for (int i = 0; i <= 100; i += 10)
@@ -323,20 +283,16 @@ int main()
     std::cout << "Welcome to the Quokspie installer!\n";
     std::cout << "==========================================\n\n";
 
-    std::vector<std::tuple<int, std::string>> selected_gpus = detectAndSelectGPUs();
+    std::vector<int> selected_gpus = detectAndSelectGPUs();
 
     if (!selected_gpus.empty())
     {
-        std::cout << "\nSelected GPUs:\n";
-        for (const auto &gpu : selected_gpus)
+        std::cout << "\nSelected GPUs: ";
+        for (int gpu : selected_gpus)
         {
-            int index;
-            std::string uuid;
-            std::tie(index, uuid) = gpu;
-
-            std::cout << "Index: " << index << ", UUID: " << uuid << "\n";
+            std::cout << gpu << " ";
         }
-        std::cout << "\n";
+        std::cout << "\n\n";
     }
     else
     {
@@ -355,7 +311,7 @@ int main()
         switch (choice)
         {
         case 1:
-            success = signUp(selected_gpus);
+            success = signUp();
             break;
         case 2:
             success = login();

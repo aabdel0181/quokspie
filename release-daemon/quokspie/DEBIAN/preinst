@@ -1,0 +1,61 @@
+#!/bin/bash
+set -e
+echo "MEOWWWWW..."
+# Check for CUDA toolkit
+if ! command -v nvcc &> /dev/null
+then
+  echo "Error: NVIDIA CUDA Toolkit is not installed."
+  exit 1
+else
+  echo "NVIDIA CUDA Toolkit is installed."
+fi
+
+# Check for NVML
+if ! ldconfig -p | grep libnvidia-ml.so > /dev/null
+then
+  echo "Error: NVML (NVIDIA Management Library) is not installed."
+  exit 1
+else
+  echo "NVML (NVIDIA Management Library) is installed."
+fi
+
+# # Check for SGX drivers and tools
+# if ! ls /dev | grep sgx > /dev/null
+# then
+#   echo "Error: Intel SGX is not enabled or drivers are not installed."
+#   exit 1
+# else
+#   echo "Intel SGX is enabled and drivers are installed."
+# fi
+
+# Compile and run the welcome
+# gcc -o installer_welcome installer_welcome.c -lcuda -lnvidia-ml
+# Run the installer
+# Extract package contents
+# Run the installer
+
+# Locate the package directory dynamically
+PACKAGE_DIR=$(dirname "$(readlink -f "$0")")
+echo "Package directory: $PACKAGE_DIR"
+
+INSTALLER_PATH="$PACKAGE_DIR/installer"
+
+# Debug: Print contents of package directory
+echo "Contents of package directory:"
+ls -la "$PACKAGE_DIR"
+
+# Run the installer executable if it exists and is executable
+if [ -x "$INSTALLER_PATH" ]; then
+    echo "Running installer..."
+    "$INSTALLER_PATH"
+    INSTALLER_EXIT_CODE=$?
+    if [ $INSTALLER_EXIT_CODE -ne 0 ]; then
+        echo "Installer failed with exit code $INSTALLER_EXIT_CODE"
+        exit $INSTALLER_EXIT_CODE
+    fi
+else
+    echo "Error: Installer executable not found or not executable at $INSTALLER_PATH"
+    exit 1
+fi
+
+echo "Installation completed successfully."
