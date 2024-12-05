@@ -16,7 +16,7 @@ const Row2 = () => {
                     alignItems="center" 
                     fontSize="1rem"
                     height="100%"
-                    style={{ marginTop: '-60px', position: 'relative', zIndex: 1 }}
+                    style={{ marginTop: '-60px', position: 'relative', zIndex: 1, fontFamily: 'FKGrotesk, Helvetica'  }}
                 >
                     <div style={{ 
                         fontSize: "5rem", 
