@@ -12,6 +12,7 @@ import Signup from "./scenes/Signup/Signup";
 import Logout from "./scenes/logout/Logout";
 import Cluster from "./scenes/cluster"
 import Home from "./scenes/home"
+import Download from "./scenes/download"
 
 // Function to check session validity
 const checkSession = async () => {
@@ -83,6 +84,7 @@ function App() {
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/download" element={<Download />} />
               <Route path="/" element={<Home />} />
 
               {/* Protected Routes */}

@@ -78,6 +78,19 @@ const Navbar = () => {
                 </Box>
                 <Box sx={{ "&:hover": { color: palette.primary[100] } }}>
                     <Link
+                        to="/download"
+                        onClick={() => setSelected("download")}
+                        style={{
+                            color: selected === "download" ? "inherit" : palette.grey[700],
+                            textDecoration: "inherit",
+                            fontSize: "18px"
+                        }}
+                    >
+                        Download
+                    </Link>
+                </Box>
+                <Box sx={{ "&:hover": { color: palette.primary[100] } }}>
+                    <Link
                         to="/signup"
                         onClick={() => setSelected("signup")}
                         style={{

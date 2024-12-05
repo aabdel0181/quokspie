@@ -22,6 +22,8 @@ const gridTemplateSmallScreens = `
     "a"
     "a"
     "a"
+    "a"
+    "a"
     "b"
     "b"
     "b"
