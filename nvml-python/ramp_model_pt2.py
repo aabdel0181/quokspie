@@ -7,7 +7,7 @@ import boto3
 from dotenv import load_dotenv
 import os
 from decimal import Decimal
-
+import json
 import requests
 from datetime import datetime, timezone
 
@@ -16,6 +16,7 @@ load_dotenv()
 # CONSTANTS
 # Time-dependent dielectric breakdown
 a = 78
+
 b = -0.081
 X = 0.759
 Y = -66.8
@@ -121,7 +122,7 @@ def mttf_calculations(metrics):
     print("Current density: ", j)
     exponent_em = e_aem / (k * temperature)
     exp_value_em = safe_exp(exponent_em)
-    #A_EM = MTTF_target_hours / ((j**(-1*n_em)) * math.exp(e_aem/(k*T_worst)))
+    A_EM = MTTF_target_hours / ((j**(-1*n_em)) * math.exp(e_aem/(k*T_worst)))
     MTTF_EM = A_EM * j**(-1 * n_em) * exp_value_em
 
     #Stress Migration MTTF Calculation
@@ -172,17 +173,24 @@ def main():
                 "voltage": metrics["Voltage"],
                 "power_usage": metrics["PowerUsage"],
                 "delta_t": metrics["DeltaT"],
-                "mttf_em": MTTF_EM,
-                "mttf_sm": MTTF_SM,
-                "mttf_tddb": MTTF_TDDB,
-                "mttf_tc": MTTF_TC,
-                "mttf_overall": MTTF_Overall,
+                "mttf_em": Decimal(MTTF_EM),  # MTTF_EM and others may be Decimal
+                "mttf_sm": Decimal(MTTF_SM),
+                "mttf_tddb": Decimal(MTTF_TDDB),
+                "mttf_tc": Decimal(MTTF_TC),
+                "mttf_overall": Decimal(MTTF_Overall),
             }
 
-            # send data to API
+            # Convert all Decimal objects to float
+            def convert_decimal(obj):
+                if isinstance(obj, Decimal):
+                    return float(obj)  # Or str(obj) if high precision is required
+                raise TypeError
+
+           # send data to API
             try:
                 response = requests.post(
-                    "http://localhost:9000/ramp-results", json=ramp_data
+                    "http://localhost:9000/ramp-results",
+                    json=json.loads(json.dumps(ramp_data, default=convert_decimal))  # Serialize with Decimal conversion
                 )
                 if response.status_code == 200:
                     print("Data successfully inserted into ramp_model_results.")
