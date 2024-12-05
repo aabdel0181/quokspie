@@ -4,6 +4,7 @@ type Props = {
     sideText: string;
     subtitle?: string;
     icon?: React.ReactNode;
+    fontSize?: string;
 };
-declare const BoxHeader: ({ icon, title, subtitle, sideText }: Props) => import("react/jsx-runtime").JSX.Element;
+declare const BoxHeader: ({ icon, title, subtitle, sideText, fontSize }: Props) => import("react/jsx-runtime").JSX.Element;
 export default BoxHeader;
