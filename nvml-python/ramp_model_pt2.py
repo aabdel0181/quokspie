@@ -122,7 +122,7 @@ def mttf_calculations(metrics):
     print("Current density: ", j)
     exponent_em = e_aem / (k * temperature)
     exp_value_em = safe_exp(exponent_em)
-    #A_EM = MTTF_target_hours / ((j**(-1*n_em)) * math.exp(e_aem/(k*T_worst)))
+    A_EM = MTTF_target_hours / ((j**(-1*n_em)) * math.exp(e_aem/(k*T_worst)))
     MTTF_EM = A_EM * j**(-1 * n_em) * exp_value_em
 
     #Stress Migration MTTF Calculation
