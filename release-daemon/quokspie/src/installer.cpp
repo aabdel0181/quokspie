@@ -37,13 +37,12 @@ void clearScreen()
 }
 
 // helper function to handle http requests
-size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* output)
+size_t WriteCallback(void *contents, size_t size, size_t nmemb, std::string *output)
 {
     size_t totalSize = size * nmemb;
-    output->append((char*)contents, totalSize);
+    output->append((char *)contents, totalSize);
     return totalSize;
 }
-
 
 // makes a silly progress bar
 void displayProgressBar(int progress)
@@ -65,13 +64,16 @@ void displayProgressBar(int progress)
 }
 
 // returns: vector of GPU indices
-std::vector<int> detectAndSelectGPUs()
+#include <tuple>
+
+std::vector<std::tuple<int, std::string>> detectAndSelectGPUs()
 {
     nvmlReturn_t result;
     unsigned int device_count;
     char name[NVML_DEVICE_NAME_V2_BUFFER_SIZE];
+    char uuid[NVML_DEVICE_UUID_BUFFER_SIZE];
     nvmlDevice_t handle;
-    std::vector<int> selected_devices;
+    std::vector<std::tuple<int, std::string>> selected_devices;
 
     result = nvmlInit();
     if (result != NVML_SUCCESS)
@@ -107,7 +109,14 @@ std::vector<int> detectAndSelectGPUs()
             continue;
         }
 
-        std::cout << "[" << i << "] " << name << "\n";
+        result = nvmlDeviceGetUUID(handle, uuid, NVML_DEVICE_UUID_BUFFER_SIZE);
+        if (result != NVML_SUCCESS)
+        {
+            log_message(LogLevel::WARNING, "Failed to get device UUID for device " + std::to_string(i) + ": " + std::string(nvmlErrorString(result)));
+            continue;
+        }
+
+        std::cout << "[" << i << "] " << name << " (UUID: " << uuid << ")\n";
     }
 
     // prompts the user to select which GPUs they wish to track
@@ -121,7 +130,15 @@ std::vector<int> detectAndSelectGPUs()
         {
             for (unsigned int i = 0; i < device_count; i++)
             {
-                selected_devices.push_back(i);
+                result = nvmlDeviceGetHandleByIndex(i, &handle);
+                if (result == NVML_SUCCESS)
+                {
+                    result = nvmlDeviceGetUUID(handle, uuid, NVML_DEVICE_NAME_V2_BUFFER_SIZE);
+                    if (result == NVML_SUCCESS)
+                    {
+                        selected_devices.push_back(std::make_tuple(i, std::string(uuid)));
+                    }
+                }
             }
             break;
         }
@@ -133,7 +150,15 @@ std::vector<int> detectAndSelectGPUs()
         {
             if (index >= 0 && index < static_cast<int>(device_count))
             {
-                selected_devices.push_back(index);
+                result = nvmlDeviceGetHandleByIndex(index, &handle);
+                if (result == NVML_SUCCESS)
+                {
+                    result = nvmlDeviceGetUUID(handle, uuid, NVML_DEVICE_NAME_V2_BUFFER_SIZE);
+                    if (result == NVML_SUCCESS)
+                    {
+                        selected_devices.push_back(std::make_tuple(index, std::string(uuid)));
+                    }
+                }
             }
             else
             {
@@ -157,7 +182,6 @@ std::vector<int> detectAndSelectGPUs()
     nvmlShutdown();
     return selected_devices;
 }
-
 // TODO: Make this real XD
 bool signUp()
 {
@@ -211,11 +235,12 @@ bool signUp()
         break;
     }
 
-    CURL* curl;
+    CURL *curl;
     CURLcode res;
     curl = curl_easy_init();
 
-    if (!curl) {
+    if (!curl)
+    {
         std::cerr << "Failed to initialize curl correctly" << std::endl;
         return false;
     }
@@ -264,7 +289,7 @@ bool login()
 }
 
 // makes it look like stuff is happening (actual install takes 2 seconds LOL)
-void runInstallation(const std::vector<int> &selected_gpus)
+void runInstallation(const std::vector<std::tuple<int, std::string>> &selected_gpus)
 {
     std::cout << "\nSaving Quokkas..\n";
     for (int i = 0; i <= 100; i += 10)
@@ -282,16 +307,20 @@ int main()
     std::cout << "Welcome to the Quokspie installer!\n";
     std::cout << "==========================================\n\n";
 
-    std::vector<int> selected_gpus = detectAndSelectGPUs();
+    std::vector<std::tuple<int, std::string>> selected_gpus = detectAndSelectGPUs();
 
     if (!selected_gpus.empty())
     {
-        std::cout << "\nSelected GPUs: ";
-        for (int gpu : selected_gpus)
+        std::cout << "\nSelected GPUs:\n";
+        for (const auto &gpu : selected_gpus)
         {
-            std::cout << gpu << " ";
+            int index;
+            std::string uuid;
+            std::tie(index, uuid) = gpu;
+
+            std::cout << "Index: " << index << ", UUID: " << uuid << "\n";
         }
-        std::cout << "\n\n";
+        std::cout << "\n";
     }
     else
     {
