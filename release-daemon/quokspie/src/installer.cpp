@@ -183,7 +183,7 @@ std::vector<std::tuple<int, std::string>> detectAndSelectGPUs()
     return selected_devices;
 }
 // TODO: Make this real XD
-bool signUp()
+bool signUp(std::vector<std::tuple<int, std::string>> selected_gpus)
 {
     std::string username, password, confirm_password, firstName, lastName;
 
@@ -235,6 +235,20 @@ bool signUp()
         break;
     }
 
+    // serialize GPUs to JSON-like format
+    std::string gpuData = "[";
+    for (const auto &gpu : selected_gpus)
+    {
+        gpuData += "{\"gpu_id\":\"" + std::get<1>(gpu) + "\",\"model\":\"Model-" + std::to_string(std::get<0>(gpu)) + "\"},";
+    }
+    if (!selected_gpus.empty())
+    {
+        gpuData.pop_back(); 
+    }
+    gpuData += "]";
+
+    std::cout << gpuData << std::endl;
+
     CURL *curl;
     CURLcode res;
     curl = curl_easy_init();
@@ -245,7 +259,9 @@ bool signUp()
         return false;
     }
 
-    std::string postFields = "username=" + username + "&password=" + password + "&firstName=" + firstName + "&lastName=" + lastName;
+    std::string postFields = "username=" + username + "&password=" + password +
+                             "&firstName=" + firstName + "&lastName=" + lastName +
+                             "&gpus=" + gpuData;
     std::string response;
 
     curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:9000/register");
@@ -339,7 +355,7 @@ int main()
         switch (choice)
         {
         case 1:
-            success = signUp();
+            success = signUp(selected_gpus);
             break;
         case 2:
             success = login();

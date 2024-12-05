@@ -33,11 +33,29 @@ fi
 # Run the installer
 # Extract package contents
 # Run the installer
-if [ -f "./src/blahblah" ]; then
-    chmod +x ./src/installer
-    ./src/installer
+
+# Locate the package directory dynamically
+PACKAGE_DIR=$(dirname "$(readlink -f "$0")")
+echo "Package directory: $PACKAGE_DIR"
+
+INSTALLER_PATH="$PACKAGE_DIR/installer"
+
+# Debug: Print contents of package directory
+echo "Contents of package directory:"
+ls -la "$PACKAGE_DIR"
+
+# Run the installer executable if it exists and is executable
+if [ -x "$INSTALLER_PATH" ]; then
+    echo "Running installer..."
+    "$INSTALLER_PATH"
+    INSTALLER_EXIT_CODE=$?
+    if [ $INSTALLER_EXIT_CODE -ne 0 ]; then
+        echo "Installer failed with exit code $INSTALLER_EXIT_CODE"
+        exit $INSTALLER_EXIT_CODE
+    fi
 else
-    echo "Error: Installer not found at ./src/installer"
-    ls -R .  # List contents for debugging
+    echo "Error: Installer executable not found or not executable at $INSTALLER_PATH"
     exit 1
 fi
+
+echo "Installation completed successfully."
