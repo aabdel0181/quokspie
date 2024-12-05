@@ -125,7 +125,7 @@ const Row1 = () => {
                     flexDirection="column"
                     fontSize="1rem"
                     height="100%"
-                    style={{ marginTop: "-60px" }}
+                    style={{ marginTop: "-60px", fontFamily: 'FKGrotesk, Helvetica' }}
                 >
                     <h1 style={{ fontSize: "7rem", color: "white" }}>
                     {mttfHistory.length > 0 ? calculateAverage() : "Loading..."}
