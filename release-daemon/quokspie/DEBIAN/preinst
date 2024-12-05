@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
-echo "MEOWWWWW..."
+echo "Checking dependencies..." 
+
+
 # Check for CUDA toolkit
 if ! command -v nvcc &> /dev/null
 then

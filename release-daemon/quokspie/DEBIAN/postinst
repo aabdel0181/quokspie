@@ -3,14 +3,14 @@ set -e
 
 sudo chmod +x /usr/local/bin/quokspie
 # Reload systemd manager configuration
-systemctl daemon-reload
+sudo systemctl daemon-reload
 
 
 # Optionally, you can start your service here if it should start immediately after installation
-systemctl start quokspie.service
+sudo systemctl start quokspie.service
 
 # If you want the service to start on boot, enable it
-systemctl enable quokspie.service
+sudo systemctl enable quokspie.service
 
 echo "Quokspie daemon reloaded successfully."
 
