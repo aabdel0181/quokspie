@@ -13,7 +13,7 @@ const BackgroundBox = styled(Box)(({ theme }) => ({
 }));
 
 const Row3 = () => {
-    
+
     return (
         <>
             <DashboardBox gridArea="c" sx={{ backgroundColor: 'transparent', boxShadow: 'none' }}>
@@ -21,27 +21,29 @@ const Row3 = () => {
                     <WindowIcon style={{ fontSize: '60px', color: 'white' }} />
                     <BackgroundBox>
                         <span style={{ color: 'white', fontSize: '16px' }}>
-                            Windows Installer
+                            Windows Installer (Coming Soon)
                         </span>
                     </BackgroundBox>
                 </div>
             </DashboardBox>
             <DashboardBox gridArea="d" sx={{ backgroundColor: 'transparent', boxShadow: 'none' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center' }}>
-                    <BugReportIcon style={{ fontSize: '48px', color: 'white' }} />
-                    <BackgroundBox>
-                        <span style={{ color: 'white', marginTop: '20px', fontSize: '16px' }}>
-                            .deb and .rpm Installer
-                        </span>
-                    </BackgroundBox>
-                </div>
+                <a href="/assets/quokspie.deb" download style={{ textDecoration: 'none' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center' }}>
+                        <BugReportIcon style={{ fontSize: '48px', color: 'white' }} />
+                        <BackgroundBox>
+                            <span style={{ color: 'white', marginTop: '20px', fontSize: '16px' }}>
+                                .deb and .rpm Installer
+                            </span>
+                        </BackgroundBox>
+                    </div>
+                </a>
             </DashboardBox>
             <DashboardBox gridArea="e" sx={{ backgroundColor: 'transparent', boxShadow: 'none' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center' }}>
                     < AppleIcon style={{ fontSize: '48px', color: 'white' }} />
                     <BackgroundBox>
                         <span style={{ color: 'white', marginTop: '20px', fontSize: '16px' }}>
-                            Mac Installer
+                            Mac Installer (Coming Soon)
                         </span>
                     </BackgroundBox>
                 </div>
