@@ -1,7 +1,9 @@
-#include "Enclave_t.h"
-#include <sgx_tcrypto.h>
+#include "../build/Enclave_t.h"
+#include "sgx_tcrypto.h"
+#include "sgx_trts.h"
+#include <cstring>
 
-char[32] pk;
+char* pk[32];
 
 //global RSA Key Pair
 sgx_ec256_private_t private_key;
@@ -25,7 +27,7 @@ void generateAttestedKeyPair() {
     // create ecc context
     status = sgx_ecc256_open_context(&ecc_handle);
     if (status != SGX_SUCCESS) {
-        enclavePrint("Failed to open ECC context.");
+        enclavePrintf("Failed to open ECC context.");
         return;
     }
 
@@ -33,10 +35,10 @@ void generateAttestedKeyPair() {
     status = sgx_ecc256_create_key_pair(&private_key, &public_key, ecc_handle);
     if (status != SGX_SUCCESS) {
         sgx_ecc256_close_context(ecc_handle);
-        enclavePrint("Failed to generate key pair.");
+        enclavePrintf("Failed to generate key pair.");
         return;
     }
-    enclavePrint("Key pair successfully generated.");
+    enclavePrintf("Key pair successfully generated.");
     sgx_ecc256_close_context(ecc_handle);
 
     //attestation
@@ -59,22 +61,22 @@ void tempKeyGen(unsigned char *key) {
     sgx_status_t status = sgx_read_rand(key, 32);
     if (status != SGX_SUCCESS) {
         memset(key, 0, 32); // Clear key if generation fails
-        enclavePrint("Failed to generate secure random key.");
+        enclavePrintf("Failed to generate secure random key.");
         return;
     }
 
-    enclavePrint("Secure HMAC key generated successfully.");
+    enclavePrintf("Secure HMAC key generated successfully.");
 }
 
 
 //hmac validation
 
-sgx_status_t validate_hmac(const unsigned char *key, size_t key_len,
-                           const unsigned char *data, size_t data_len,
-                           const unsigned char *received_hmac) {
+sgx_status_t validate_hmac(unsigned char *key, size_t key_len,
+                           unsigned char *data, size_t data_len,
+                           unsigned char *received_hmac) {
     unsigned char calculated_hmac[32];
 
-    sgx_status_t status = generate_hmac(key, key_len, data, data_len, calculated_hmac);
+    sgx_status_t status = sgx_hmac_sha256_msg(key, key_len, data, data_len, calculated_hmac, 32);
     if (status != SGX_SUCCESS) {
         return status;
     }
@@ -91,7 +93,7 @@ sgx_status_t validate_hmac(const unsigned char *key, size_t key_len,
 //ECALLS
 
 //tell the tee to initialize
-void ecallInit() {
+sgx_status_t ecallInit() {
     //keygen
     generateAttestedKeyPair();
     //attestation TBD
@@ -101,9 +103,10 @@ void ecallInit() {
     //get handles
     getDeviceHandles(tempKey, handles, &numHandles);
 
+    return SGX_SUCCESS;
 }
 //tell the TEE it's time to grab data
-void ecallGetData() {
+sgx_status_t ecallGetData() {
     //keygen for temp key
     tempKeyGen(tempKey);
 
@@ -112,11 +115,12 @@ void ecallGetData() {
     unsigned int quokk;
     unsigned int mem;
     unsigned int power;
-    unsigned int hmac;
+    unsigned char hmac[32];
 
     //poll gpu for each handle we have
     for(size_t i = 0; i < numHandles; i ++) {
-        pollGPU(tempKey, handles[i], &temp, &quokk, &mem, &power, &hmac);
+
+        pollGPU(tempKey, reinterpret_cast<void*>(handles[i]), &temp, &quokk, &mem, &power, hmac);
         
         //validate hmac
 
@@ -137,15 +141,19 @@ void ecallGetData() {
         // validateh hmac
         sgx_status_t status = validate_hmac(tempKey, 32, data, offset, hmac);
         if (status != SGX_SUCCESS) {
-            enclavePrint("HMAC validation failed! Data tampered with");
+            enclavePrintf("HMAC validation failed! Data tampered with");
         }
 
-        // FUTURE PROCESSING
+        /*
         char success_msg[128];
         snprintf(success_msg, sizeof(success_msg),
                 "Device %zu validated: Temp=%u, Clock=%u, Mem=%uMB, Power=%uW",
                 i, temp, quokk, mem, power);
-        enclavePrint(success_msg);
+        enclavePrintf(success_msg);
+        */
+        // FUTURE PROCESSING
+        
     }
+    return SGX_SUCCESS;
 
 }
