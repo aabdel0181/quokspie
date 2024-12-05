@@ -352,7 +352,46 @@ bool login()
     std::cout << "Enter password: ";
     std::getline(std::cin, password);
 
-    // TODO: actually verify credentials hehe
+    // Serialize login data as JSON
+    std::string loginData = "{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
+
+    // Initialize CURL
+    CURL* curl = curl_easy_init();
+    if (!curl)
+    {
+        std::cerr << "Failed to initialize curl correctly" << std::endl;
+        return false;
+    }
+
+    // Set CURL options
+    std::string response;
+    curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:9000/login");
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, loginData.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+
+    // Add headers
+    struct curl_slist* headers = NULL;
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+    // Perform the request
+    CURLcode res = curl_easy_perform(curl);
+
+    // Cleanup
+    curl_easy_cleanup(curl);
+    curl_slist_free_all(headers);
+
+    if (res != CURLE_OK)
+    {
+        std::cerr << "Curl error: " << curl_easy_strerror(res) << "\n";
+        return false;
+    }
+
+    // Process the server's response
+    std::cout << "Response from server: " << response << "\n";
+
+    // Simulate login animation 
     std::cout << "Completing retina scan";
     for (int i = 0; i < 3; i++)
     {
@@ -360,8 +399,19 @@ bool login()
         std::cout << ".";
         std::cout.flush();
     }
-    std::cout << "\nLogin successful!\n";
-    return true;
+    std::cout << "\n";
+
+    // Check if the response contains a success message
+    if (response.find("\"message\":\"Login successful.\"") != std::string::npos)
+    {
+        std::cout << "Login successful!\n";
+        return true;
+    }
+    else
+    {
+        std::cerr << "Login failed. Check your username and password.\n";
+        return false;
+    }
 }
 
 // makes it look like stuff is happening (actual install takes 2 seconds LOL)
