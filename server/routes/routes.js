@@ -91,40 +91,71 @@ export const postNewPw = async function (req, res) {
 
 // POST /register
 export const postRegister = async function (req, res) {
-    const { username, password, firstName, lastName, gpuModel, gpuSerial } = req.body;
+    console.log("Incoming request body:", req.body);
 
-    if (!username || !password || !firstName || !lastName || !gpuModel || !gpuSerial) {
-        return res.status(400).send({ error: 'Missing required fields.' });
+    const { username, password, firstName, lastName, gpus } = req.body;
+
+    if (!username || !password || !firstName || !lastName || !gpus) {
+        return res.status(400).send({ error: "Missing required fields." });
     }
 
     try {
-        const username_rows = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`);
-        if (username_rows.length > 0) {
-            return res.status(409).send({ error: 'Username already exists.' });
+        // parse `gpus` if it's a JSON string
+        const parsedGpus = typeof gpus === "string" ? JSON.parse(gpus) : gpus;
+
+        if (!Array.isArray(parsedGpus)) {
+            throw new Error("Invalid GPU data: expected an array.");
         }
 
+        // Check if username exists
+        const username_rows = await db.send_sql(`SELECT * FROM users WHERE username = '${username}'`);
+        if (username_rows.length > 0) {
+            return res.status(409).send({ error: "Username already exists." });
+        }
+
+        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Insert user into the database
         await db.send_sql(
             `INSERT INTO users (username, hashed_password, first_name, last_name) VALUES ('${username}', '${hashedPassword}', '${firstName}', '${lastName}')`
         );
 
-        // await db.send_sql(
-        //     `INSERT INTO gpus (model, gpu_id, user_id) VALUES ('${gpuModel}', '${gpuSerial}', (SELECT user_id FROM users WHERE username = '${username}'))`
-        // );
+        // Retrieve the user_id
+        const userRows = await db.send_sql(`SELECT user_id FROM users WHERE username = '${username}'`);
+        if (userRows.length === 0) {
+            throw new Error("Failed to retrieve user_id for the registered user.");
+        }
+        const user_id = userRows[0].user_id;
 
-        const user_id = (
-            await db.send_sql(`SELECT user_id FROM users WHERE username = '${username}'`)
-        )[0].user_id;
+        for (const gpu of gpus) {
+            const { gpu_id, model } = gpu;
 
-        // Set session variables
+            console.log(gpu_id);
+            console.log(model);
+
+            if (!gpu_id || !model) {
+                throw new Error("Invalid GPU object: missing gpu_id or model.");
+            }
+
+            try {
+                await db.send_sql(
+                    `INSERT INTO gpus (gpu_id, model, user_id) VALUES ('${gpu_id}', '${model}', ${user_id})`
+                );
+            } catch (err) {
+                console.error(`Failed to insert GPU (${gpu_id}, ${model}):`, err);
+                throw new Error("Error inserting GPUs into the database.");
+            }
+        }
+
+        // set session variables
         req.session.user_id = user_id;
         req.session.username = username;
 
-        return res.status(200).send({ message: 'User registered successfully.', username });
+        return res.status(200).send({ message: "User registered successfully.", username });
     } catch (err) {
-        console.error('Database error:', err);
-        return res.status(500).send({ error: 'Error registering user.' });
+        console.error("Error during user registration:", err);
+        return res.status(500).send({ error: "Error registering user." });
     }
 };
 

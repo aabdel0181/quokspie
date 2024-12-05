@@ -182,6 +182,44 @@ std::vector<std::tuple<int, std::string>> detectAndSelectGPUs()
     nvmlShutdown();
     return selected_devices;
 }
+
+std::string getGpuName(int deviceIndex)
+{
+    nvmlReturn_t result;
+    nvmlDevice_t handle;
+    char name[NVML_DEVICE_NAME_V2_BUFFER_SIZE];
+
+    // init NVML
+    result = nvmlInit();
+    if (result != NVML_SUCCESS)
+    {
+        log_message(LogLevel::ERROR, "Failed to initialize NVML: " + std::string(nvmlErrorString(result)));
+        return "Unknown GPU";
+    }
+
+    // get device handle by index
+    result = nvmlDeviceGetHandleByIndex(deviceIndex, &handle);
+    if (result != NVML_SUCCESS)
+    {
+        log_message(LogLevel::ERROR, "Failed to get handle for GPU index " + std::to_string(deviceIndex) + ": " + std::string(nvmlErrorString(result)));
+        nvmlShutdown();
+        return "Unknown GPU";
+    }
+
+    // get GPU name
+    result = nvmlDeviceGetName(handle, name, NVML_DEVICE_NAME_V2_BUFFER_SIZE);
+    if (result != NVML_SUCCESS)
+    {
+        log_message(LogLevel::ERROR, "Failed to get name for GPU index " + std::to_string(deviceIndex) + ": " + std::string(nvmlErrorString(result)));
+        nvmlShutdown();
+        return "Unknown GPU";
+    }
+
+    // return name
+    nvmlShutdown();
+    return std::string(name);
+}
+
 // TODO: Make this real XD
 bool signUp(std::vector<std::tuple<int, std::string>> selected_gpus)
 {
@@ -236,18 +274,33 @@ bool signUp(std::vector<std::tuple<int, std::string>> selected_gpus)
     }
 
     // serialize GPUs to JSON-like format
-    std::string gpuData = "[";
-    for (const auto &gpu : selected_gpus)
-    {
-        gpuData += "{\"gpu_id\":\"" + std::get<1>(gpu) + "\",\"model\":\"Model-" + std::to_string(std::get<0>(gpu)) + "\"},";
-    }
-    if (!selected_gpus.empty())
-    {
-        gpuData.pop_back(); 
-    }
-    gpuData += "]";
+    // Serialize the entire request body as JSON
+    std::ostringstream json;
+    json << "{";
+    json << "\"username\":\"" << username << "\",";
+    json << "\"password\":\"" << password << "\",";
+    json << "\"firstName\":\"" << firstName << "\",";
+    json << "\"lastName\":\"" << lastName << "\",";
+    json << "\"gpus\":[";
 
-    std::cout << gpuData << std::endl;
+    for (size_t i = 0; i < selected_gpus.size(); ++i)
+    {
+        int index = std::get<0>(selected_gpus[i]);
+        std::string uuid = std::get<1>(selected_gpus[i]);
+        std::string gpuName = getGpuName(index); // Function to get GPU name dynamically
+
+        json << "{\"gpu_id\":\"" << uuid << "\",\"model\":\"" << gpuName << "\"}";
+        if (i < selected_gpus.size() - 1)
+        {
+            json << ",";
+        }
+    }
+
+    json << "]";
+    json << "}";
+
+    std::string requestBody = json.str();
+    std::cout << "Request Body: " << requestBody << std::endl; // Debug log
 
     CURL *curl;
     CURLcode res;
@@ -259,19 +312,26 @@ bool signUp(std::vector<std::tuple<int, std::string>> selected_gpus)
         return false;
     }
 
-    std::string postFields = "username=" + username + "&password=" + password +
-                             "&firstName=" + firstName + "&lastName=" + lastName +
-                             "&gpus=" + gpuData;
-    std::string response;
-
+    // Set CURL options
     curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:9000/register");
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postFields.c_str());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, requestBody.c_str());
+
+    // Add headers
+    struct curl_slist *headers = NULL;
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+    // Response handling
+    std::string response;
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
-    // here we would actually create the account
+    // Perform the request
     res = curl_easy_perform(curl);
+
+    // Cleanup
     curl_easy_cleanup(curl);
+    curl_slist_free_all(headers);
 
     if (res != CURLE_OK)
     {
@@ -292,7 +352,46 @@ bool login()
     std::cout << "Enter password: ";
     std::getline(std::cin, password);
 
-    // TODO: actually verify credentials hehe
+    // Serialize login data as JSON
+    std::string loginData = "{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
+
+    // Initialize CURL
+    CURL* curl = curl_easy_init();
+    if (!curl)
+    {
+        std::cerr << "Failed to initialize curl correctly" << std::endl;
+        return false;
+    }
+
+    // Set CURL options
+    std::string response;
+    curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:9000/login");
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, loginData.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+
+    // Add headers
+    struct curl_slist* headers = NULL;
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+    // Perform the request
+    CURLcode res = curl_easy_perform(curl);
+
+    // Cleanup
+    curl_easy_cleanup(curl);
+    curl_slist_free_all(headers);
+
+    if (res != CURLE_OK)
+    {
+        std::cerr << "Curl error: " << curl_easy_strerror(res) << "\n";
+        return false;
+    }
+
+    // Process the server's response
+    std::cout << "Response from server: " << response << "\n";
+
+    // Simulate login animation 
     std::cout << "Completing retina scan";
     for (int i = 0; i < 3; i++)
     {
@@ -300,8 +399,19 @@ bool login()
         std::cout << ".";
         std::cout.flush();
     }
-    std::cout << "\nLogin successful!\n";
-    return true;
+    std::cout << "\n";
+
+    // Check if the response contains a success message
+    if (response.find("\"message\":\"Login successful.\"") != std::string::npos)
+    {
+        std::cout << "Login successful!\n";
+        return true;
+    }
+    else
+    {
+        std::cerr << "Login failed. Check your username and password.\n";
+        return false;
+    }
 }
 
 // makes it look like stuff is happening (actual install takes 2 seconds LOL)
