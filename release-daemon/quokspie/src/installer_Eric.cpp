@@ -7,7 +7,6 @@
 #include <iomanip>
 #include <thread>
 #include <chrono>
-
 #include <curl/curl.h>
 #include <cstring>
 
@@ -220,15 +219,17 @@ bool signUp()
         return false;
     }
 
+    // Prepare the POST fields
     std::string postFields = "username=" + username + "&password=" + password + "&firstName=" + firstName + "&lastName=" + lastName;
     std::string response;
 
+    // Update the URL to match the correct endpoint for registration
     curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:9000/register");
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postFields.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
-    // here we would actually create the account
+    // Perform the POST request
     res = curl_easy_perform(curl);
     curl_easy_cleanup(curl);
 

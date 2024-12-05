@@ -93,7 +93,7 @@ export const postNewPw = async function (req, res) {
 export const postRegister = async function (req, res) {
     const { username, password, firstName, lastName, gpuModel, gpuSerial } = req.body;
 
-    if (!username || !password || !firstName || !lastName || !gpuModel || !gpuSerial) {
+    if (!username || !password || !firstName || !lastName) {
         return res.status(400).send({ error: 'Missing required fields.' });
     }
 

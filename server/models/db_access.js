@@ -1,5 +1,12 @@
 import mysql from 'mysql';
-import config from '../config.json' assert { type: 'json' };
+// import config from '../config.json' assert { type: 'json' };
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const config = require('../config.json');
+
+export default config;
+
 import dotenv from 'dotenv';
 
 dotenv.config(); // Load environment variables
