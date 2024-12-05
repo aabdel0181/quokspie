@@ -48,7 +48,7 @@
 sudo systemctl daemon-reload
 
 # Enable and start the service
-sudo systemctl enable quakspie.service
-sudo systemctl start quakspie.service
+sudo systemctl enable quokspie.service
+sudo systemctl start quokspie.service
 
-echo "Quakspie GPU Monitor has been installed and started."
+echo "Quokspie GPU Monitor has been installed and started."

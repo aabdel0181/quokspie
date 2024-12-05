@@ -17,5 +17,5 @@
 
 # Build the package
 # dpkg-deb --build . ../quakspie.deb
-dpkg-deb --root-owner-group --build quakspied
-echo "Debian package created: ./quakspied.deb"
+dpkg-deb --root-owner-group --build quokspie
+echo "Debian package created: ./quokspie.deb"

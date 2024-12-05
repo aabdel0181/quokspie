@@ -1,10 +1,10 @@
 [Unit]
-Description=Quakspie GPU Monitor Service
+Description=Quokspie GPU Monitor Service
 After=network.target
 
 [Service]
 Type=forking
-ExecStart=/usr/local/bin/quakspie
+ExecStart=/usr/local/bin/quokspie
 Restart=always
 User=root
 
