@@ -1,0 +1,15 @@
+#!/bin/bash
+set -e
+
+# Reload systemd manager configuration
+systemctl daemon-reload
+
+# Optionally, you can start your service here if it should start immediately after installation
+# systemctl start your-service-name.service
+
+# If you want the service to start on boot, enable it
+# systemctl enable your-service-name.service
+
+echo "Quokspie daemon reloaded successfully."
+
+exit 0
