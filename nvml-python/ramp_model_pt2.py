@@ -1,5 +1,7 @@
 # import pynvml
 # from pynvml import *
+import datetime
+import json
 import time
 # import threading
 import math
@@ -7,6 +9,8 @@ import boto3
 from dotenv import load_dotenv
 import os
 from decimal import Decimal
+
+import requests
 
 load_dotenv()
 
@@ -160,23 +164,40 @@ def main():
     last_thermal_check = time.time()
 
     while True:
-        # MTTF calculations (every 5 seconds)
-        metrics = get_latest_metrics(device_id, 1)
+        metrics = get_latest_metrics(device_id)
+        # if metrics:
+        #     MTTF_EM, MTTF_SM, MTTF_TDDB, MTTF_TC, MTTF_overall = mttf_calculations(metrics)
+        #     print(f"Latest Metrics for Device {device_id}:")
+        #     print(f"  Temperature: {metrics['Temperature']} °C")
+        #     print(f"  Voltage: {metrics['Voltage']:.2f} V")
+        #     print(f"  Power Usage: {metrics['PowerUsage']} W")
+        #     print(f"  Delta_T: {metrics['DeltaT']} °C")
+        #     print(f"MTTF Calculations:")
+        #     print(f"  MTTF_EM: {MTTF_EM:.2f} hours")
+        #     print(f"  MTTF_SM: {MTTF_SM:.2f} hours")
+        #     print(f"  MTTF_TDDB: {MTTF_TDDB:.2f} hours")
+        #     print(f"  MTTF_TC: {MTTF_TC:.2f} hours")
+        #     print(f"  Overall MTTF: {MTTF_overall:.2f} hours")
+        # else:
+        #     print(f"No metrics found for Device ID: {device_id}")
+            
         if metrics:
-            MTTF_EM, MTTF_SM, MTTF_TDDB, MTTF_TC, MTTF_overall = mttf_calculations(metrics)
-            print(f"Latest Metrics for Device {device_id}:")
-            print(f"  Temperature: {metrics['Temperature']} °C")
-            print(f"  Voltage: {metrics['Voltage']:.2f} V")
-            print(f"  Power Usage: {metrics['PowerUsage']} W")
-            print(f"  Delta_T: {metrics['DeltaT']} °C")
-            print(f"MTTF Calculations:")
-            print(f"  MTTF_EM: {MTTF_EM / (365 * 24):.2f} hours")
-            print(f"  MTTF_SM: {MTTF_SM / (365 * 24):.2f} hours")
-            print(f"  MTTF_TDDB: {MTTF_TDDB/ (365 * 24):.2f} hours")
-            print(f"  MTTF_TC: {MTTF_TC / (365 * 24):.2f} hours")
-            print(f"  Overall MTTF: {MTTF_overall:.2f} hours")
-        else:
-            print(f"No metrics found for Device ID: {device_id}")
+            MTTF_EM, MTTF_SM, MTTF_TDDB, MTTF_TC, MTTF_Overall = mttf_calculations(metrics)
+            
+            # prep data to send
+            ramp_data = {
+                "gpu_id": device_id,
+                "timestamp": datetime.now(datetime.timezone.utc).isoformat(),
+                "temperature": metrics["Temperature"],
+                "voltage": metrics["Voltage"],
+                "power_usage": metrics["PowerUsage"],
+                "delta_t": metrics["DeltaT"],
+                "mttf_em": Decimal(MTTF_EM),  # MTTF_EM and others may be Decimal
+                "mttf_sm": Decimal(MTTF_SM),
+                "mttf_tddb": Decimal(MTTF_TDDB),
+                "mttf_tc": Decimal(MTTF_TC),
+                "mttf_overall": Decimal(MTTF_Overall),
+            }
 
         # Thermal cycling check (every 120 seconds)
         current_time = time.time()
@@ -187,6 +208,27 @@ def main():
             else:
                 print("No thermal cycle detected in the last 120 seconds.")
             last_thermal_check = current_time  # Reset the thermal check timer
+
+        # Convert all Decimal objects to float
+            def convert_decimal(obj):
+                if isinstance(obj, Decimal):
+                    return float(obj)  # Or str(obj) if high precision is required
+                raise TypeError
+
+           # send data to API
+            try:
+                response = requests.post(
+                    "http://localhost:9000/ramp-results",
+                    json=json.loads(json.dumps(ramp_data, default=convert_decimal))  # Serialize with Decimal conversion
+                )
+                if response.status_code == 200:
+                    print("Data successfully inserted into ramp_model_results.")
+                else:
+                    print(f"Failed to insert data: {response.text}")
+            except requests.RequestException as e:
+                print(f"Error sending data to server: {e}")
+        else:
+            print(f"No metrics found for Device ID: {device_id}")
 
         time.sleep(5)  # Wait 5 seconds before next MTTF calculation
 
