@@ -54,11 +54,55 @@ def approximate_voltage(clock_speed, f_min, f_max, v_min, v_max):
     voltage = v_min + (v_max - v_min) * (clock_speed - f_min) / (f_max - f_min)
     return voltage
 
+def get_detailed_ecc_errors(handle):
+    """Retrieve detailed ECC error counts."""
+    try:
+        memory_error_types = [
+            ("Corrected", pynvml.NVML_MEMORY_ERROR_TYPE_CORRECTED),
+            ("Uncorrected", pynvml.NVML_MEMORY_ERROR_TYPE_UNCORRECTED),
+        ]
+        
+        memory_locations = [
+            ("L1 Cache", pynvml.NVML_MEMORY_LOCATION_L1_CACHE),
+            ("L2 Cache", pynvml.NVML_MEMORY_LOCATION_L2_CACHE),
+            ("Device Memory", pynvml.NVML_MEMORY_LOCATION_DEVICE_MEMORY),
+            ("Register File", pynvml.NVML_MEMORY_LOCATION_REGISTER_FILE),
+            ("Texture Memory", pynvml.NVML_MEMORY_LOCATION_TEXTURE_MEMORY),
+            ("Shared Memory", pynvml.NVML_MEMORY_LOCATION_SHARED_MEMORY),
+        ]
+        
+        ecc_errors = {}
+        
+        for error_name, error_type in memory_error_types:
+            location_errors = {}
+            for location_name, location in memory_locations:
+                error_count = pynvml.nvmlDeviceGetDetailedEccErrors(
+                    handle, error_type, location
+                )
+                location_errors[location_name] = error_count
+            ecc_errors[error_name] = location_errors
+        
+        return ecc_errors
+    except pynvml.NVMLError as error:
+        raise RuntimeError(f"Failed to retrieve detailed ECC errors: {error}")
+    
+
 # Poll GPU metrics and calculate delta_T
 def gpu_prober(handle):
     last_power_reading = None
     T_min = float('inf')
     T_max = float('-inf')
+    ecc_mode = pynvml.nvmlDeviceGetEccMode(handle)
+    current_mode = "Enabled" if ecc_mode == pynvml.NVML_FEATURE_ENABLED else "Disabled"
+
+    if (current_mode == "Disabled") :
+        try:
+            pynvml.nvmlDeviceSetEccMode(handle, pynvml.NVML_FEATURE_ENABLED)
+            print("ECC Mode enabled successfully.")
+        except pynvml.NVMLError as error:
+            print(f"Failed to enable ECC mode: {error}")
+            if "InsufficientPermissions" in str(error):
+                print("You might need administrative privileges to enable ECC.")
 
     while True:
         temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
@@ -68,6 +112,11 @@ def gpu_prober(handle):
 
         # Estimate voltage from clock speed
         voltage = approximate_voltage(clock_speed, F_MIN, F_MAX, V_MIN, V_MAX)
+
+        error_count = {}
+        #check to see the error count (corrected and uncorrected) and location
+        if (current_mode == "Enabled"):
+            error_count = get_detailed_ecc_errors(handle)    
 
         # Cache last successful power value
         try:
