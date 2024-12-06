@@ -54,7 +54,7 @@ def approximate_voltage(clock_speed, f_min, f_max, v_min, v_max):
     voltage = v_min + (v_max - v_min) * (clock_speed - f_min) / (f_max - f_min)
     return voltage
 
-def get_detailed_ecc_errors(handle):
+def get_ecc_errors(handle):
     """Retrieve detailed ECC error counts."""
     try:
         memory_error_types = [
@@ -62,27 +62,19 @@ def get_detailed_ecc_errors(handle):
             ("Uncorrected", pynvml.NVML_MEMORY_ERROR_TYPE_UNCORRECTED),
         ]
         
-        memory_locations = [
-            ("L1 Cache", pynvml.NVML_MEMORY_LOCATION_L1_CACHE),
-            ("L2 Cache", pynvml.NVML_MEMORY_LOCATION_L2_CACHE),
-            ("Device Memory", pynvml.NVML_MEMORY_LOCATION_DEVICE_MEMORY),
-            ("Register File", pynvml.NVML_MEMORY_LOCATION_REGISTER_FILE),
-            ("Texture Memory", pynvml.NVML_MEMORY_LOCATION_TEXTURE_MEMORY),
-            ("Shared Memory", pynvml.NVML_MEMORY_LOCATION_SHARED_MEMORY),
-        ]
-        
-        ecc_errors = {}
-        
+        total_corrected = 0
+        total_uncorrected = 0
+
         for error_name, error_type in memory_error_types:
-            location_errors = {}
-            for location_name, location in memory_locations:
-                error_count = pynvml.nvmlDeviceGetDetailedEccErrors(
-                    handle, error_type, location
-                )
-                location_errors[location_name] = error_count
-            ecc_errors[error_name] = location_errors
+            error_count = pynvml.nvmlDeviceGetDetailedEccErrors(
+                handle, error_type, pynvml.NVML_MEMORY_LOCATION_ALL
+            )
+            if error_name == "Corrected":
+                total_corrected += error_count
+            elif error_name == "Uncorrected":
+                total_uncorrected += error_count
         
-        return ecc_errors
+        return total_corrected, total_uncorrected
     except pynvml.NVMLError as error:
         raise RuntimeError(f"Failed to retrieve detailed ECC errors: {error}")
     
@@ -94,7 +86,7 @@ def gpu_prober(handle):
     T_max = float('-inf')
     ecc_mode = pynvml.nvmlDeviceGetEccMode(handle)
     current_mode = "Enabled" if ecc_mode == pynvml.NVML_FEATURE_ENABLED else "Disabled"
-
+    
     if (current_mode == "Disabled") :
         try:
             pynvml.nvmlDeviceSetEccMode(handle, pynvml.NVML_FEATURE_ENABLED)
@@ -113,10 +105,9 @@ def gpu_prober(handle):
         # Estimate voltage from clock speed
         voltage = approximate_voltage(clock_speed, F_MIN, F_MAX, V_MIN, V_MAX)
 
-        error_count = {}
         #check to see the error count (corrected and uncorrected) and location
         if (current_mode == "Enabled"):
-            error_count = get_detailed_ecc_errors(handle)    
+           corrected_errors, uncorrected_errors = get_ecc_errors(handle)    
 
         # Cache last successful power value
         try:
@@ -135,7 +126,7 @@ def gpu_prober(handle):
         if delta_T == 0:
             delta_T = 1.0
 
-        print(f"ID: {device_id}, Temp: {temperature} °C, Clock: {clock_speed} MHz, Power: {last_power_reading} W, Memory Used: {memory_info.used / (1024 ** 2):.2f} MB, Voltage: {voltage:.2f} V, Delta_T: {delta_T:.2f} °C")
+        print(f"ID: {device_id}, Temp: {temperature} °C, Clock: {clock_speed} MHz, Power: {last_power_reading} W, Memory Used: {memory_info.used / (1024 ** 2):.2f} MB, Voltage: {voltage:.2f} V, Delta_T: {delta_T:.2f} °C, Corrected Errors: {corrected_errors}, Uncorrected Errors: {uncorrected_errors}")
 
         # Store data in DynamoDB table
         store_metrics(
@@ -145,14 +136,16 @@ def gpu_prober(handle):
             power_usage=last_power_reading,
             memory_used=memory_info.used / (1024 ** 2),
             voltage=voltage,
-            delta_T=delta_T
+            delta_T=delta_T,
+            corrected_errors=corrected_errors,
+            uncorrected_errors=uncorrected_errors
         )
 
         # Poll regularly
         time.sleep(1)
 
 # Store GPU metrics in DynamoDB
-def store_metrics(device_id, temperature, clock_speed, power_usage, memory_used, voltage, delta_T):
+def store_metrics(device_id, temperature, clock_speed, power_usage, memory_used, voltage, delta_T, corrected_errors, uncorrected_errors):
     timestamp = datetime.now(timezone.utc)
 
     table.put_item(
@@ -164,7 +157,9 @@ def store_metrics(device_id, temperature, clock_speed, power_usage, memory_used,
             'PowerUsage': Decimal(str(power_usage)),  # Convert to string first to handle float to Decimal
             'MemoryUsed': Decimal(str(memory_used)),  # Convert to string first to handle float to Decimal
             'Voltage': Decimal(str(voltage)),
-            'DeltaT': Decimal(str(delta_T))
+            'DeltaT': Decimal(str(delta_T)),
+            'CorrectedErrors': Decimal(corrected_errors),
+            'UncorrectedErrors': Decimal(uncorrected_errors)
         }
     )
 

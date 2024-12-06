@@ -41,7 +41,7 @@ j_worst = 10**11       # Worst-case current density (A/m^2)
 A_TDDB = MTTF_target_hours / ((V_worst**b) * (T_worst**X) * \
                   (10**(Y / T_worst)) * (10**(Z * V_worst / T_worst)))
 A_TC = MTTF_target_hours * (delta_T_worst**q)
-A_EM = MTTF_target_hours / ((j_worst**(-1*n_em)) * math.exp(e_aem/(k*T_worst)))
+#A_EM = MTTF_target_hours / ((j_worst**(-1*n_em)) * math.exp(e_aem/(k*T_worst)))
 A_SM = MTTF_target_hours / ((delta_T_worst**(-1*n_sm)) * 
                             math.exp(e_aem/(k*T_worst)))
 
