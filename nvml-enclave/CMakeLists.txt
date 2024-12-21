@@ -56,6 +56,9 @@ set(SGX_SDK "/opt/intel/sgxsdk")
 set(SGX_LIB "${SGX_SDK}/lib64")
 set(SGX_INCLUDE "${SGX_SDK}/include")
 
+# Set SGX_MODE (default to HW, can be overridden via command-line or environment)
+set(SGX_MODE "HW" CACHE STRING "SGX mode: HW for hardware mode or SIM for simulation mode")
+
 # Enclave settings
 set(ENCLAVE_NAME "Enclave")
 set(ENCLAVE_EDL "${ENCLAVE_DIR}/Enclave.edl")
@@ -64,6 +67,11 @@ set(ENCLAVE_EDL "${ENCLAVE_DIR}/Enclave.edl")
 add_custom_command(
     OUTPUT ${ENCLAVE_DIR}/Enclave_t.c ${ENCLAVE_DIR}/Enclave_t.h
     COMMAND ${SGX_SDK}/bin/x64/sgx_edger8r --trusted ${ENCLAVE_EDL} --search-path ${SGX_INCLUDE}
+    DEPENDS ${ENCLAVE_EDL}
+)
+
+add_custom_command(
+    OUTPUT ${APP_DIR}/Enclave_u.c ${APP_DIR}/Enclave_u.h
     COMMAND ${SGX_SDK}/bin/x64/sgx_edger8r --untrusted ${ENCLAVE_EDL} --search-path ${SGX_INCLUDE}
     DEPENDS ${ENCLAVE_EDL}
 )
@@ -72,9 +80,15 @@ add_custom_command(
 add_library(${ENCLAVE_NAME}_lib STATIC ${ENCLAVE_DIR}/Enclave_t.c ${ENCLAVE_DIR}/Enclave.cpp)
 target_include_directories(${ENCLAVE_NAME}_lib PRIVATE ${SGX_INCLUDE} ${ENCLAVE_DIR})
 
+# Add SGX_MODE definition to the enclave library
+target_compile_definitions(${ENCLAVE_NAME}_lib PRIVATE SGX_MODE=${SGX_MODE})
+
 # Build the enclave shared object
 add_library(${ENCLAVE_NAME}_so SHARED ${ENCLAVE_DIR}/Enclave.cpp)
 target_include_directories(${ENCLAVE_NAME}_so PRIVATE ${SGX_INCLUDE} ${ENCLAVE_DIR})
+
+# Add SGX_MODE definition to shared object build
+target_compile_definitions(${ENCLAVE_NAME}_so PRIVATE SGX_MODE=${SGX_MODE})
 
 # Sign the enclave
 add_custom_command(
@@ -83,9 +97,24 @@ add_custom_command(
     DEPENDS ${ENCLAVE_DIR}/${ENCLAVE_NAME}.so
 )
 
+find_package(OpenSSL REQUIRED)
+target_link_libraries(gpu_odometer PRIVATE OpenSSL::Crypto)
+
+
 # Link the main executable with SGX untrusted library and NVML
 target_link_libraries(gpu_odometer PRIVATE ${SGX_LIB}/libsgx_urts.so ${ENCLAVE_NAME}_lib)
+target_link_libraries(${ENCLAVE_NAME}_so PRIVATE
+    ${SGX_LIB}/libsgx_tcrypto.a
+    ${SGX_LIB}/libsgx_tservice.a
+)
 target_include_directories(gpu_odometer PRIVATE ${SGX_INCLUDE} ${APP_DIR})
 
 # Include other directories like Stopwatch.h
 target_include_directories(gpu_odometer PRIVATE ${CMAKE_SOURCE_DIR})
+
+
+# Add SGX_MODE definition to the application
+target_compile_definitions(gpu_odometer PRIVATE SGX_MODE=${SGX_MODE})
+
+
+#compile 
